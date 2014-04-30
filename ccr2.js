@@ -324,16 +324,20 @@ var CCRGame = function(){
 
 		for(var i = 0, al = a.length; i < al; i++){
 
+			// Update coordinate
+			a[i].x += (a[i].d == 1 ? 1 : a[i].d == 3 ? -1 : 0);
+			a[i].y += (a[i].d == 0 ? -1 : a[i].d == 2 ? 1 : 0);
+
 			// Update direction
-			a[i].d = (function(x, y, d){
+			a[i].d = (function(x, y, d) {
 				if(parent.gamedata.collisions.walls["x" + x + "y" + y + "d" + d] || parent.gamedata.collisions.walls["x" + (d == 1 ? x+1 : d == 3 ? x-1 : x) + "y" + (d == 0 ? y-1 : d == 2 ? y+1 : y) + "d" + parent.directions.opp[d]]){
 					var checkd = parent.directions.check[d];
 					var hits = 0;
-					for(var i = 0, checkdl = checkd.length; i < checkdl; i++){
+					for(var i = 0, checkdl = checkd.length; i < checkdl; i++) {
 						if(parent.gamedata.collisions.walls["x" + x + "y" + y + "d" + checkd[i]] || parent.gamedata.collisions.walls["x" + (checkd[i] == 1 ? x+1 : checkd[i] == 3 ? x-1 : x) + "y" + (checkd[i] == 0 ? y-1 : checkd[i] == 2 ? y+1 : y) + "d" + parent.directions.opp[checkd[i]]]){
 							hits++;
 						}
-						else{ break; }
+						else { break; }
 					}
 					return parent.directions.hits[d][hits];
 				}
@@ -349,17 +353,13 @@ var CCRGame = function(){
 			// Detect goal collision
 			if(this.gamedata.collisions.goals['x' + a[i].x + 'y' + a[i].y]){ this.gamedata.events[friendlyName].goals(a); }
 
-			// Update coordinate
-			a[i].x += (a[i].d == 1 ? 1 : a[i].d == 3 ? -1 : 0);
-			a[i].y += (a[i].d == 0 ? -1 : a[i].d == 2 ? 1 : 0);
-
 		}
 
 	};
 
 	this.play = function(){
 
-		// if(this.frame.master > 1000){ this.pause(); }
+		if(this.frame.master > 10000){ this.pause(); } // prevent infinite looping during debugging
 
 		if(this.state == 0){ return false; }
 

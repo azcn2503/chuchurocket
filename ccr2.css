@@ -54,9 +54,11 @@ body, html {
 }
 .ccr_wrapper .grid.col1 {
 	background-color: #ffd;
+	background-image: url('img/col1.png');
 }
 .ccr_wrapper .grid.col2 {
 	background-color: #fdf;
+	background-image: url('img/col2.png');
 }
 
 .ccr_wrapper .hole {
@@ -92,7 +94,7 @@ body, html {
 }
 
 .ccr_wrapper .wall {
-	background-color: #000;
+	background-color: #800;
 	z-index: 4;
 }
 
@@ -125,6 +127,7 @@ body, html {
 	top: 0;
 	width: 200px;
 	z-index: 10;
+	display: none; /* temporary */
 }
 
 /* Animations */
