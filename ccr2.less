@@ -1,0 +1,121 @@
+body, html {
+	font: 8pt sans-serif;
+	height: 100%;
+	margin: 0;
+	overflow: hidden;
+}
+
+#feedback {
+	right: -190px;
+	&:hover { right: 0; }
+}
+
+#levels {
+	left: -190px;
+	&:hover { left: 0; }
+}
+
+.ccr_wrapper {
+	display: inline-block;
+	.arrow {
+		background-image: url('img/arrows.png');
+		height: 50px;
+		width: 50px;
+		&.dir0 { background-position: 0; }
+		&.dir1 { background-position: -50px; }
+		&.dir2 { background-position: -100px; }
+		&.dir3 { background-position: -150px; }
+	}
+	.cat {
+		background-color: #f80;
+		border-radius: 25px;
+		z-index: 3;
+		-webkit-transform: scale(0.75);
+	}
+	.goal {
+		background-color: #08f;
+		border-radius: 25px;
+		z-index: 3;
+		-webkit-transform: scale(0.75);
+	}
+	.grid {
+		background-image: url('img/grid.png');
+		z-index: 1;
+		&.col1 {
+			background-color: #ffd;
+			background-image: url('img/col1.png');
+		}
+		&.col2 {
+			background-color: #fdf;
+			background-image: url('img/col2.png');
+		}
+	}
+	.hole {
+		background-color: #000;
+		border-radius: 25px;
+		z-index: 1;
+		-webkit-transform: scale(0.75);
+	}
+	.mouse {
+		background-color: #88f;
+		border-radius: 25px;
+		z-index: 2;
+		-webkit-transform: scale(0.5);
+	}
+	.toolbar {
+		.arrow {
+			display: inline-block;
+			.label {
+				color: #fff;
+				display: table-cell;
+				font-weight: bold;
+				height: 50px;
+				pointer-events: none;
+				text-align: center;
+				vertical-align: middle;
+				width: 50px;
+			}
+		}
+	}
+	.wall {
+		background-color: #800;
+		z-index: 4;
+	}
+}
+
+.content {
+	padding: 10px;
+}
+
+.dt {
+	display: table;
+	height: 100%;
+	width: 100%;
+}
+.dtc {
+	display: table-cell;
+	height: 100%;
+	text-align: center;
+	vertical-align: middle;
+	width: 100%;
+}
+
+.shadowtext {
+	text-shadow: rgba(0, 0, 0, .5) 0px 1px 2px;
+}
+
+.sidebox {
+	background-color: #000;
+	color: #fff;
+	height: 100%;
+	position: fixed;
+	top: 0;
+	width: 200px;
+	z-index: 10;
+	display: none; /* temporary */
+}
+
+#feedback, #levels {
+	transition: left .2s, right .2s;
+	-webkit-transition: left .2s, right .2s;
+}
