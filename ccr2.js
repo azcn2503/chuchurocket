@@ -104,19 +104,38 @@ var CCRGame = function(){
 			}
 		};
 
-		// And stuff
 		this.directions = {
+
+			// 0 = Up, 1 = Right, 2 = Down, 3 = Left
+
+			// When processing wall collisions, check walls in these directions
+			// { current_direction: [ direction_1, direction_2, direction_3 ] }
 			check: {0: [0, 1, 3], 1: [1, 2, 0], 2: [2, 3, 1], 3: [3, 0, 2]},
+
+			// Calculate the new direction based on number of wall collisions
+			// { current_direction: { number_of_hits: new_direction }
 			hits: {0: {1: 1, 2: 3, 3: 2}, 1: {1: 2, 2: 0, 3: 3}, 2: {1: 3, 2: 1, 3: 0}, 3: {1: 0, 2: 2, 3: 1}},
+
+			// Next directions
+			// { current_direction: next_direction }
 			next: {0: 1, 1: 2, 2: 3, 3: 0},
+
+			// Opposite directions
+			// { current_direction: opposite_direction }
 			opp: {0: 2, 1: 3, 2: 0, 3: 1},
+
+			// Previous directions
+			// { current_direction: previous_direction }
 			prev: {0: 3, 1: 0, 2: 1, 3: 2}
+
 		};
+
 		this.frame = {
 			master: 0,
 			cats: 0,
 			mice: 0
 		};
+
 		this.state = 0;
 
 	};
@@ -338,15 +357,18 @@ var CCRGame = function(){
 
 			// Update direction
 			a[i].d = (function(x, y, d) {
-				if(parent.gamedata.collisions.walls["x" + x + "y" + y + "d" + d] || parent.gamedata.collisions.walls["x" + (d == 1 ? x+1 : d == 3 ? x-1 : x) + "y" + (d == 0 ? y-1 : d == 2 ? y+1 : y) + "d" + parent.directions.opp[d]]){
+				// Check if there is a wall directly in front of us (check the current grid square, and the grid square ahead of us)
+				if (parent.gamedata.collisions.walls["x" + x + "y" + y + "d" + d] || parent.gamedata.collisions.walls["x" + (d == 1 ? x+1 : d == 3 ? x-1 : x) + "y" + (d == 0 ? y-1 : d == 2 ? y+1 : y) + "d" + parent.directions.opp[d]]){
 					var checkd = parent.directions.check[d];
 					var hits = 0;
+					// Find out how many walls we will hit
 					for(var i = 0, checkdl = checkd.length; i < checkdl; i++) {
 						if(parent.gamedata.collisions.walls["x" + x + "y" + y + "d" + checkd[i]] || parent.gamedata.collisions.walls["x" + (checkd[i] == 1 ? x+1 : checkd[i] == 3 ? x-1 : x) + "y" + (checkd[i] == 0 ? y-1 : checkd[i] == 2 ? y+1 : y) + "d" + parent.directions.opp[checkd[i]]]){
 							hits++;
 						}
 						else { break; }
 					}
+					// Return the new direction based on the number of walls we hit
 					return parent.directions.hits[d][hits];
 				}
 				return d;
