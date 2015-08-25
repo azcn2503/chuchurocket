@@ -1,70 +1,15 @@
-if(Meteor.isClient) {
-
-	window.requestAnimFrame = (function(){
-		return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(callback){
-			window.setTimeout(callback, 1000 / 60);
-		};
-	})();
-
-	function ce(s){
-		return $(document.createElement(s));
-	}
-
-	window.onload = function(){
-
-		var test = new CCRGame();
-		test.init(
-			{
-				arrows: {
-					available: {0: 2, 1: 3, 2: 1, 3: 1}
-				},
-				cats: [
-					{x: 1, y: 1, d: 1}
-				],
-				goals: [
-					{x: 10, y: 1}
-				],
-				grid: {x: 12, y: 9},
-				holes: [
-					{x: 1, y: 2}
-				],
-				mice: [
-					{x: 0, y: 0, d: 1},
-					{x: 1, y: 0, d: 1},
-					{x: 2, y: 0, d: 1}
-				],
-				walls: [
-					{x: 0, y: 0, d: 2, t: 1},
-					{x: 2, y: 1, d: 1, t: 1},
-					{x: 2, y: 4, d: 2, t: 1},
-					{x: 1, y: 4, d: 3, t: 1},
-					{x: 11, y: 6, d: 2, t: 1},
-					{x: 2, y: 6, d: 3, t: 1},
-					{x: 2, y: 5, d: 1, t: 1},
-					{x: 2, y: 5, d: 3, t: 1},
-					{x: 5, y: 0, d: 1, t: 1},
-					{x: 4, y: 8, d: 3, t: 1},
-					{x: 4, y: 2, d: 0, t: 1}
-				]
-			}
-		);
-		test.initDOM();
-		test.add("#game");
-		test.start();
-
-	};
-
-}
-
 var CCRGame = function(){
 
 	var self = this;
 
 	self.gamedata = {};
+	self.initData = {};
 
 	this.init = function(gamedata){
 
 		if(!gamedata){ return false; }
+
+		self.initData = gamedata;
 
 		// Create the gamedata
 		self.gamedata = {
@@ -96,11 +41,18 @@ var CCRGame = function(){
 				y: 9
 			},
 			original: {
-				cats: gamedata.cats || [],
-				goals: gamedata.goals || [],
-				holes: gamedata.holes || [],
-				mice: gamedata.mice || [],
-				walls: gamedata.walls || []
+				cats: [],
+				goals: [],
+				holes: [],
+				mice: [],
+				walls: []
+			},
+			active: {
+				cats: [],
+				goals: [],
+				holes: [],
+				mice: [],
+				walls: []
 			}
 		};
 
@@ -130,13 +82,13 @@ var CCRGame = function(){
 
 		};
 
-		this.frame = {
+		self.frame = {
 			master: 0,
 			cats: 0,
 			mice: 0
 		};
 
-		this.state = 0;
+		self.state = 0;
 
 	};
 
@@ -190,9 +142,8 @@ var CCRGame = function(){
 		];
 
 		for (var i in items) {
-			for (var j in self.gamedata.original[items[i].type]) {
-				self.addItem(items[i].type, self.gamedata.original[items[i].type][j], items[i].container);
-				console.log(items[i].type);
+			for (var j in self.initData[items[i].type]) {
+				self.addItem(items[i].type, self.initData[items[i].type][j], items[i].container);
 			}
 		}
 
@@ -223,9 +174,9 @@ var CCRGame = function(){
 		self.gamedata.dom = _ccr_wrapper;
 
 		// Clone the gamedata
-		self.gamedata.active = $.extend(true, {}, self.gamedata.original);
-
-		console.log('Active: ', self.gamedata.active);
+		//self.gamedata.active = JSON.parse(JSON.stringify(self.gamedata.original));
+		console.log('self.gamedata.original: ', self.gamedata.original);
+		console.log('self.gamedata.active: ', self.gamedata.active);
 
 	};
 
@@ -235,7 +186,16 @@ var CCRGame = function(){
 
 	};
 
+	this.addGameData = function(type, obj) {
+
+		self.gamedata.original[type].push(obj);
+		self.gamedata.active[type].push(obj);
+
+	};
+
 	this.addItem = function(type, data, target){
+
+		console.log('Adding item: ', type, data, target);
 
 		var el = null;
 
@@ -246,8 +206,6 @@ var CCRGame = function(){
 			.css("position", "absolute");
 		}
 
-		// Update gamedata first
-
 		switch (type) {
 			case 'cats':
 				if (target) {
@@ -255,7 +213,7 @@ var CCRGame = function(){
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				self.gamedata.original.cats.push({ x: data.x, y: data.y, d: data.d, obj: _el });
+				self.addGameData(type, { x: data.x, y: data.y, d: data.d, obj: _el });
 			break;
 			case 'holes':
 				if (target) {
@@ -263,7 +221,7 @@ var CCRGame = function(){
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				self.gamedata.original.holes.push({x: data.x, y: data.y, obj: _el});
+				self.addGameData(type, {x: data.x, y: data.y, obj: _el});
 				self.gamedata.collisions.holes['x' + data.x + 'y' + data.y] = 1;
 			break;
 			case 'goals':
@@ -272,7 +230,7 @@ var CCRGame = function(){
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				self.gamedata.original.goals.push({x: data.x, y: data.y, obj: _el});
+				self.addGameData(type, {x: data.x, y: data.y, obj: _el});
 				self.gamedata.collisions.goals['x' + data.x + 'y' + data.y] = 1;
 			break;
 			case 'grid':
@@ -291,7 +249,7 @@ var CCRGame = function(){
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				self.gamedata.original.mice.push({x: data.x, y: data.y, d: data.d, obj: _el});
+				self.addGameData(type, {x: data.x, y: data.y, d: data.d, obj: _el});
 			break;
 			case 'walls':
 				if (target) {
@@ -312,6 +270,8 @@ var CCRGame = function(){
 	};
 
 	this.animate = function(a, frame){
+
+		// Update the DOM with new gamedata movements and smooth things out
 
 		frame = frame % 10;
 
@@ -345,6 +305,27 @@ var CCRGame = function(){
 
 	this.move = function(a, friendlyName){
 
+		// Move gamedata, but don't animate them.
+
+		var checkCollidibleWalls = function(x, y, d) {
+
+			// Checks for walls directly in front of us.
+			// Given 2,2,0 it will check 2,2,0 and 2,1,2 for example.
+
+			if (self.gamedata.collisions.walls['x' + x + 'y' + y + 'd' + d]) {
+				return true;
+			}
+
+			var nextX = x + (d == 1 ? 1 : d == 3 ? -1 : 0);
+			var nextY = y + (d == 0 ? -1 : d == 2 ? 1 : 0);
+			var nextD = self.directions.opp[d];
+
+			if (self.gamedata.collisions.walls['x' + nextX + 'y' + nextY + 'd' + nextD]) {
+				return true;
+			}
+
+		};
+
 		var parent = this;
 
 		self.gamedata.collisions[friendlyName] = {};
@@ -358,12 +339,12 @@ var CCRGame = function(){
 			// Update direction
 			a[i].d = (function(x, y, d) {
 				// Check if there is a wall directly in front of us (check the current grid square, and the grid square ahead of us)
-				if (parent.gamedata.collisions.walls["x" + x + "y" + y + "d" + d] || parent.gamedata.collisions.walls["x" + (d == 1 ? x+1 : d == 3 ? x-1 : x) + "y" + (d == 0 ? y-1 : d == 2 ? y+1 : y) + "d" + parent.directions.opp[d]]){
+				if (checkCollidibleWalls(x, y, d)){
 					var checkd = parent.directions.check[d];
 					var hits = 0;
 					// Find out how many walls we will hit
 					for(var i = 0, checkdl = checkd.length; i < checkdl; i++) {
-						if(parent.gamedata.collisions.walls["x" + x + "y" + y + "d" + checkd[i]] || parent.gamedata.collisions.walls["x" + (checkd[i] == 1 ? x+1 : checkd[i] == 3 ? x-1 : x) + "y" + (checkd[i] == 0 ? y-1 : checkd[i] == 2 ? y+1 : y) + "d" + parent.directions.opp[checkd[i]]]){
+						if (checkCollidibleWalls(x, y, checkd[i])) {
 							hits++;
 						}
 						else { break; }
@@ -389,31 +370,33 @@ var CCRGame = function(){
 
 	this.play = function(){
 
-		if(this.frame.master > 10000){ this.pause(); } // prevent infinite looping during debugging
+		//console.log('self.gamedata.active: ', self.gamedata.active);
 
-		if(this.state == 0){ return false; }
+		if(self.frame.master > 10000){ self.pause(); } // prevent infinite looping during debugging
 
-		var parent = this;
+		if(self.state == 0){ return false; }
 
-		this.frame.master++;
+		self.frame.master++;
 
-		if(this.frame.master % 2 == 0){
-			this.frame.mice++;
-			this.animate(self.gamedata.active.mice, this.frame.mice);
+		//console.log(self.frame.master);
+
+		if(self.frame.master % 2 == 0){
+			self.frame.mice++;
+			self.animate(self.gamedata.active.mice, self.frame.mice);
 		}
-		if(this.frame.master % 3 == 0){
-			this.frame.cats++;
-			this.animate(self.gamedata.active.cats, this.frame.cats);
+		if(self.frame.master % 3 == 0){
+			self.frame.cats++;
+			self.animate(self.gamedata.active.cats, self.frame.cats);
 		}
 
-		if(this.frame.master % 20 == 0){
-			this.move(self.gamedata.active.mice, 'mice');
+		if(self.frame.master % 20 == 0){
+			self.move(self.gamedata.active.mice, 'mice');
 		}
-		if(this.frame.master % 30 == 0){
-			this.move(self.gamedata.active.cats, 'cats');
+		if(self.frame.master % 30 == 0){
+			self.move(self.gamedata.active.cats, 'cats');
 		}
-		if(this.frame.master % 20 == 0 || this.frame.master % 30 == 0){
-			this.detectCollisions();
+		if(self.frame.master % 20 == 0 || self.frame.master % 30 == 0){
+			self.detectCollisions();
 		}
 
 	};
@@ -430,13 +413,11 @@ var CCRGame = function(){
 
 	this.start = function(){
 
-		var parent = this;
-
 		this.state = 1;
 
 		(function animloop(){
 			requestAnimFrame(animloop);
-			parent.play();
+			self.play();
 		})();
 
 	};
@@ -448,3 +429,80 @@ var CCRGame = function(){
 	};
 
 };
+
+if(Meteor.isClient) {
+
+	Session.set('gameIsReady', false);
+
+	function ce(s){
+		return $(document.createElement(s));
+	}
+
+	window.requestAnimFrame = (function(){
+		return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(callback){
+			window.setTimeout(callback, 1000 / 60);
+		};
+	})();
+
+	var test = new CCRGame();
+	test.init(
+		{
+			arrows: {
+				available: {0: 2, 1: 3, 2: 1, 3: 1}
+			},
+			cats: [
+				{x: 1, y: 1, d: 1}
+			],
+			goals: [
+				{x: 10, y: 1}
+			],
+			grid: {x: 12, y: 9},
+			holes: [
+				{x: 1, y: 2}
+			],
+			mice: [
+				{x: 0, y: 0, d: 1},
+				{x: 1, y: 0, d: 1},
+				{x: 2, y: 0, d: 1}
+			],
+			walls: [
+				{x: 0, y: 0, d: 2, t: 1},
+				{x: 2, y: 1, d: 1, t: 1},
+				{x: 2, y: 4, d: 2, t: 1},
+				{x: 1, y: 4, d: 3, t: 1},
+				{x: 11, y: 6, d: 2, t: 1},
+				{x: 2, y: 6, d: 3, t: 1},
+				{x: 2, y: 5, d: 1, t: 1},
+				{x: 2, y: 5, d: 3, t: 1},
+				{x: 5, y: 0, d: 1, t: 1},
+				{x: 4, y: 8, d: 3, t: 1},
+				{x: 4, y: 2, d: 0, t: 1}
+			]
+		}
+	);
+
+	Template.playback.helpers({
+		'gameIsReady': function() {
+			return Session.get('gameIsReady');
+		}
+	});
+
+	Template.playback.events({
+		'click input[name=play]': function() {
+			test.start();
+		},
+		'click input[name=stop]': function() {
+			test.stop();
+		}
+	});
+
+	window.onload = function() {
+
+		test.initDOM();
+		test.add("#game");
+		Session.set('gameIsReady', true);
+		test.start();
+
+	}
+
+}

@@ -1,8 +1,34 @@
+* {
+	box-sizing: border-box;
+}
+
 body, html {
 	font: 8pt sans-serif;
 	height: 100%;
 	margin: 0;
 	overflow: hidden;
+}
+
+input[type=button] {
+	background-color: #ddd;
+	border: 0;
+	cursor: pointer;
+	outline: none;
+	padding: 10px 20px 10px 20px;
+	&:hover {
+		background-color: darken(#ddd, 10%);
+	}
+	&:active {
+		background-color: darken(#ddd, 20%);
+	}
+}
+.playback {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	text-align: center;
+	padding: 10px;
 }
 
 #feedback {

@@ -17,10 +17,18 @@
 	<div id="levels" class="sidebox"><div class="content">Level Selection</div></div>
 	<div id="feedback" class="sidebox"><div class="content">Feedback</div></div>
 
-	<div class="dt"><div class="dtc" id="game"></div></div>
+	<div class="dt"><div class="dtc" id="game">{{> playback}}</div></div>
 
 </body>
 
 <template name="item">
 	<div class="{{className}}" style="margin-left: {{marginLeft}}px; margin-top: {{marginTop}}px; position: absolute; width: {{width}}px; height: {{height}}px;"></div>
+</template>
+<template name='playback'>
+	<div class='playback'>
+		{{#if gameIsReady}}
+			<input type='button' name='play' value='Play' />
+			<input type='button' name='stop' value='Stop' />
+		{{/if}}
+	</div>
 </template>
