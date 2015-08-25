@@ -58,7 +58,7 @@ var CCRGame = function(){
 
 		this.directions = {
 
-			// 0 = Up, 1 = Right, 2 = Down, 3 = Left
+			// 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None
 
 			// When processing wall collisions, check walls in these directions
 			// { current_direction: [ direction_1, direction_2, direction_3 ] }
@@ -66,7 +66,7 @@ var CCRGame = function(){
 
 			// Calculate the new direction based on number of wall collisions
 			// { current_direction: { number_of_hits: new_direction }
-			hits: {0: {1: 1, 2: 3, 3: 2}, 1: {1: 2, 2: 0, 3: 3}, 2: {1: 3, 2: 1, 3: 0}, 3: {1: 0, 2: 2, 3: 1}},
+			hits: {0: {1: 1, 2: 3, 3: 2, 4: -1}, 1: {1: 2, 2: 0, 3: 3, 4: -1}, 2: {1: 3, 2: 1, 3: 0, 4: -1}, 3: {1: 0, 2: 2, 3: 1, 4: -1}},
 
 			// Next directions
 			// { current_direction: next_direction }
@@ -356,13 +356,15 @@ var CCRGame = function(){
 			})(a[i].x, a[i].y, a[i].d);
 
 			// Update collisions
-			self.gamedata.collisions[friendlyName]["x" + a[i].x + "y" + a[i].y + "d" + a[i].d] = 1;
+			self.gamedata.collisions[friendlyName]["x" + a[i].x + "y" + a[i].y] = a[i];
 
 			// Detect hole collision
 			if(self.gamedata.collisions.holes['x' + a[i].x + 'y' + a[i].y]){ self.gamedata.events[friendlyName].holes(a); }
 
 			// Detect goal collision
 			if(self.gamedata.collisions.goals['x' + a[i].x + 'y' + a[i].y]){ self.gamedata.events[friendlyName].goals(a); }
+
+			//console.log('Collision data: ', JSON.stringify(self.gamedata.collisions));
 
 		}
 
