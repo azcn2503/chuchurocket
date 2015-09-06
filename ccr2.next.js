@@ -1,18 +1,20 @@
-var CCRGame = function(){
+class CCRGame {
 
-	var self = this;
+	constructor() {
 
-	self.gamedata = {};
-	self.initData = {};
+		this.gamedata = {};
+		this.initData = {};
 
-	this.init = function(gamedata){
+	}
+
+	init(gamedata) {
 
 		if(!gamedata){ return false; }
 
-		self.initData = gamedata;
+		this.initData = gamedata;
 
 		// Create the gamedata
-		self.gamedata = {
+		this.gamedata = {
 			arrows: {
 				available: {0: 0, 1: 0, 2: 0, 3: 0},
 				placed: {0: [], 1: [], 2: [], 3: []}
@@ -27,12 +29,12 @@ var CCRGame = function(){
 			dom: null,
 			events: {
 				cats: {
-					holes: function(a){ console.log('Laugh at silly cat'); },
-					goals: function(a){ console.log('You is fail'); }
+					holes: (a) => { console.log('Laugh at silly cat'); },
+					goals: (a) => { console.log('You is fail'); }
 				},
 				mice: {
-					holes: function(a){ console.log('Poor little mouse'); },
-					goals: function(a){ console.log('You are win'); }
+					holes: (a) => { console.log('Poor little mouse'); },
+					goals: (a) => { console.log('You are win'); }
 				}
 			},
 			grid: {
@@ -82,58 +84,58 @@ var CCRGame = function(){
 
 		};
 
-		self.frame = {
+		this.frame = {
 			master: 0,
 			cats: 0,
 			mice: 0
 		};
 
-		self.state = 0;
+		this.state = 0;
 
 	};
 
-	this.initDOM = function() {
+	initDOM() {
 
 		// Create wrapper
-		var _ccr_wrapper = ce("div")
-		.css("width", self.gamedata.grid.x * 50 + "px")
-		.css("height", self.gamedata.grid.y * 50 + 50 + "px")
+		let _ccr_wrapper = ce("div")
+		.css("width", this.gamedata.grid.x * 50 + "px")
+		.css("height", this.gamedata.grid.y * 50 + 50 + "px")
 		.prop("class", "ccr_wrapper");
 
 		// Create grid wrapper
-		var _grid_wrapper = ce("div")
+		let _grid_wrapper = ce("div")
 		.prop("class", "grid_wrapper");
 
 		// Populate grid
-		for(var i = 0; i < self.gamedata.grid.x; i ++){
-			for(var j = 0; j < self.gamedata.grid.y; j ++){
+		for(let i = 0; i < this.gamedata.grid.x; i ++){
+			for(let j = 0; j < this.gamedata.grid.y; j ++){
 				this.addItem("grid", {x: i, y: j}, _grid_wrapper);
 			}
 		}
 
 		// Create wall wrapper
-		var _wall_wrapper = ce("div")
+		let _wall_wrapper = ce("div")
 		.prop("class", "wall_wrapper");
 
 		// Create wall boundaries
-		for(var i = 0; i < self.gamedata.grid.x; i ++){
-			for(var j = 0; j < self.gamedata.grid.y; j ++){
-				if(!self.gamedata.grid.data["x" + i + "y" + (j-1)]){ // No grid square above
-					self.addItem("walls", {x: i, y: j, d: 0, t: 1}, _wall_wrapper);
+		for(let i = 0; i < this.gamedata.grid.x; i ++){
+			for(let j = 0; j < this.gamedata.grid.y; j ++){
+				if(!this.gamedata.grid.data["x" + i + "y" + (j-1)]){ // No grid square above
+					this.addItem("walls", {x: i, y: j, d: 0, t: 1}, _wall_wrapper);
 				}
-				if(!self.gamedata.grid.data["x" + i + "y" + (j+1)]){ // No grid square below
-					self.addItem("walls", {x: i, y: j, d: 2, t: 1}, _wall_wrapper);
+				if(!this.gamedata.grid.data["x" + i + "y" + (j+1)]){ // No grid square below
+					this.addItem("walls", {x: i, y: j, d: 2, t: 1}, _wall_wrapper);
 				}
-				if(!self.gamedata.grid.data["x" + (i+1) + "y" + (j)]){ // No grid square to right
-					self.addItem("walls", {x: i, y: j, d: 1, t: 1}, _wall_wrapper);
+				if(!this.gamedata.grid.data["x" + (i+1) + "y" + (j)]){ // No grid square to right
+					this.addItem("walls", {x: i, y: j, d: 1, t: 1}, _wall_wrapper);
 				}
-				if(!self.gamedata.grid.data["x" + (i-1) + "y" + (j)]){ // No grid square to left
-					self.addItem("walls", {x: i, y: j, d: 3, t: 1}, _wall_wrapper);
+				if(!this.gamedata.grid.data["x" + (i-1) + "y" + (j)]){ // No grid square to left
+					this.addItem("walls", {x: i, y: j, d: 3, t: 1}, _wall_wrapper);
 				}
 			}
 		}
 
-		var items = [
+		let items = [
 			{ container: _grid_wrapper, type: 'cats' },
 			{ container: _grid_wrapper, type: 'goals' },
 			{ container: _grid_wrapper, type: 'holes' },
@@ -141,28 +143,28 @@ var CCRGame = function(){
 			{ container: _wall_wrapper, type: 'walls' }
 		];
 
-		for (var i in items) {
-			for (var j in self.initData[items[i].type]) {
-				self.addItem(items[i].type, self.initData[items[i].type][j], items[i].container);
+		for (let i in items) {
+			for (let j in this.initData[items[i].type]) {
+				this.addItem(items[i].type, this.initData[items[i].type][j], items[i].container);
 			}
 		}
 
 		// Create toolbar
-		var _toolbar = ce("div")
+		let _toolbar = ce("div")
 		.prop("class", "toolbar")
-		.css("margin-top", self.gamedata.grid.y * 50 + "px")
+		.css("margin-top", this.gamedata.grid.y * 50 + "px")
 		.css("position", "absolute");
 
 		// Create arrows
-		var _arrows = ce("div");
-		for(var i in self.gamedata.arrows.available){
-			var _arrow = ce("div")
+		let _arrows = ce("div");
+		for(let i in this.gamedata.arrows.available){
+			let _arrow = ce("div")
 			.prop("class", "arrow")
 			.addClass("dir" + i);
-			var _label = ce("div")
+			let _label = ce("div")
 			.prop("class", "label")
 			.addClass("shadowtext")
-			.text(self.gamedata.arrows.available[i]);
+			.text(this.gamedata.arrows.available[i]);
 			_arrow.append(_label);
 			_arrows.append(_arrow);
 		}
@@ -171,33 +173,33 @@ var CCRGame = function(){
 		_ccr_wrapper.append(_grid_wrapper);
 		_ccr_wrapper.append(_wall_wrapper);
 		_ccr_wrapper.append(_toolbar);
-		self.gamedata.dom = _ccr_wrapper;
+		this.gamedata.dom = _ccr_wrapper;
 
 		// Clone the gamedata
-		//self.gamedata.active = JSON.parse(JSON.stringify(self.gamedata.original));
-		console.log('self.gamedata.original: ', self.gamedata.original);
-		console.log('self.gamedata.active: ', self.gamedata.active);
+		//this.gamedata.active = JSON.parse(JSON.stringify(this.gamedata.original));
+		console.log('this.gamedata.original: ', this.gamedata.original);
+		console.log('this.gamedata.active: ', this.gamedata.active);
 
 	};
 
-	this.add = function(target){
+	add(target) {
 
-		$(target).append(self.gamedata.dom);
-
-	};
-
-	this.addGameData = function(type, obj) {
-
-		self.gamedata.original[type].push(obj);
-		self.gamedata.active[type].push(obj);
+		$(target).append(this.gamedata.dom);
 
 	};
 
-	this.addItem = function(type, data, target){
+	addGameData(type, obj) {
+
+		this.gamedata.original[type].push(obj);
+		this.gamedata.active[type].push(obj);
+
+	};
+
+	addItem(type, data, target) {
 
 		console.log('Adding item: ', type, data, target);
 
-		var el = null;
+		let _el = null;
 
 		if (target) {
 			_el = ce("div")
@@ -213,7 +215,7 @@ var CCRGame = function(){
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				self.addGameData(type, { x: data.x, y: data.y, d: data.d, obj: _el });
+				this.addGameData(type, { x: data.x, y: data.y, d: data.d, obj: _el });
 			break;
 			case 'holes':
 				if (target) {
@@ -221,8 +223,8 @@ var CCRGame = function(){
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				self.addGameData(type, {x: data.x, y: data.y, obj: _el});
-				self.gamedata.collisions.holes['x' + data.x + 'y' + data.y] = 1;
+				this.addGameData(type, {x: data.x, y: data.y, obj: _el});
+				this.gamedata.collisions.holes['x' + data.x + 'y' + data.y] = 1;
 			break;
 			case 'goals':
 				if (target) {
@@ -230,8 +232,8 @@ var CCRGame = function(){
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				self.addGameData(type, {x: data.x, y: data.y, obj: _el});
-				self.gamedata.collisions.goals['x' + data.x + 'y' + data.y] = 1;
+				this.addGameData(type, {x: data.x, y: data.y, obj: _el});
+				this.gamedata.collisions.goals['x' + data.x + 'y' + data.y] = 1;
 			break;
 			case 'grid':
 				if (target) {
@@ -241,7 +243,7 @@ var CCRGame = function(){
 					.addClass((data.x + data.y) % 2 == 0 ? "col1" : "col2")
 					.text(data.x + "x" + data.y);
 				}
-				self.gamedata.grid.data["x" + data.x + "y" + data.y] = 1;
+				this.gamedata.grid.data["x" + data.x + "y" + data.y] = 1;
 			break;
 			case 'mice':
 				if (target) {
@@ -249,7 +251,7 @@ var CCRGame = function(){
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				self.addGameData(type, {x: data.x, y: data.y, d: data.d, obj: _el});
+				this.addGameData(type, {x: data.x, y: data.y, d: data.d, obj: _el});
 			break;
 			case 'walls':
 				if (target) {
@@ -259,7 +261,8 @@ var CCRGame = function(){
 					.css("width", (data.d == 0 || data.d == 2 ? 50 : 3) + "px")
 					.css("height", (data.d == 1 || data.d == 3 ? 50 : 3) + "px");
 				}
-				self.gamedata.collisions.walls["x" + data.x + "y" + data.y + "d" + data.d] = data.t;
+				data.t = data.t || 1;
+				this.gamedata.collisions.walls["x" + data.x + "y" + data.y + "d" + data.d] = data.t;
 			break;
 		}
 
@@ -269,7 +272,7 @@ var CCRGame = function(){
 
 	};
 
-	this.animate = function(a, frame){
+	animate(a, frame) {
 
 		// Update the DOM with new gamedata movements and smooth things out
 
@@ -277,7 +280,7 @@ var CCRGame = function(){
 
 		if(frame == 0){ frame = 10; }
 
-		for(var i = 0, al = a.length; i < al; i++){
+		for(let i = 0, al = a.length; i < al; i++){
 
 			if (!a[i] || !a[i].obj || !a[i].obj.css) { continue; }
 
@@ -289,11 +292,11 @@ var CCRGame = function(){
 
 	};
 
-	this.detectCollisions = function(){
+	detectCollisions() {
 
-		for(var i in self.gamedata.collisions.mice){
+		for(let i in this.gamedata.collisions.mice){
 
-			if(self.gamedata.collisions.cats[i]){
+			if(this.gamedata.collisions.cats[i]){
 
 				console.log("wip");
 
@@ -303,128 +306,134 @@ var CCRGame = function(){
 
 	};
 
-	this.move = function(a, friendlyName){
+	move(a, friendlyName) {
 
 		// Move gamedata, but don't animate them.
 
-		var checkCollidibleWalls = function(x, y, d) {
+		let checkCollidibleWalls = (x, y, d) => {
 
 			// Checks for walls directly in front of us.
 			// Given 2,2,0 it will check 2,2,0 and 2,1,2 for example.
 
-			if (self.gamedata.collisions.walls['x' + x + 'y' + y + 'd' + d]) {
+			if (this.gamedata.collisions.walls['x' + x + 'y' + y + 'd' + d]) {
 				return true;
 			}
 
-			var nextX = x + (d == 1 ? 1 : d == 3 ? -1 : 0);
-			var nextY = y + (d == 0 ? -1 : d == 2 ? 1 : 0);
-			var nextD = self.directions.opp[d];
+			let nextX = x + (d == 1 ? 1 : d == 3 ? -1 : 0);
+			let nextY = y + (d == 0 ? -1 : d == 2 ? 1 : 0);
+			let nextD = this.directions.opp[d];
 
-			if (self.gamedata.collisions.walls['x' + nextX + 'y' + nextY + 'd' + nextD]) {
+			if (this.gamedata.collisions.walls['x' + nextX + 'y' + nextY + 'd' + nextD]) {
 				return true;
 			}
 
 		};
 
-		var parent = this;
+		let updateDirection = (x, y, d) => {
 
-		self.gamedata.collisions[friendlyName] = {};
+			// Check if there is a wall directly in front of us (check the current grid square, and the grid square ahead of us)
+			if (checkCollidibleWalls(x, y, d)){
+				let checkd = this.directions.check[d];
+				let hits = 0;
+				// Find out how many walls we will hit
+				for(let i = 0, checkdl = checkd.length; i < checkdl; i++) {
+					if (checkCollidibleWalls(x, y, checkd[i])) {
+						hits++;
+					}
+					else { break; }
+				}
+				// Return the new direction based on the number of walls we hit
+				return this.directions.hits[d][hits];
+			}
+			return d;
 
-		for(var i = 0, al = a.length; i < al; i++){
+		};
+
+		this.gamedata.collisions[friendlyName] = {};
+
+		for(let i = 0, al = a.length; i < al; i++){
 
 			// Update coordinate
 			a[i].x += (a[i].d == 1 ? 1 : a[i].d == 3 ? -1 : 0);
 			a[i].y += (a[i].d == 0 ? -1 : a[i].d == 2 ? 1 : 0);
 
 			// Update direction
-			a[i].d = (function(x, y, d) {
-				// Check if there is a wall directly in front of us (check the current grid square, and the grid square ahead of us)
-				if (checkCollidibleWalls(x, y, d)){
-					var checkd = parent.directions.check[d];
-					var hits = 0;
-					// Find out how many walls we will hit
-					for(var i = 0, checkdl = checkd.length; i < checkdl; i++) {
-						if (checkCollidibleWalls(x, y, checkd[i])) {
-							hits++;
-						}
-						else { break; }
-					}
-					// Return the new direction based on the number of walls we hit
-					return parent.directions.hits[d][hits];
-				}
-				return d;
-			})(a[i].x, a[i].y, a[i].d);
+			a[i].d = updateDirection(a[i].x, a[i].y, a[i].d);
 
 			// Update collisions
-			self.gamedata.collisions[friendlyName]["x" + a[i].x + "y" + a[i].y] = a[i];
+			this.gamedata.collisions[friendlyName]["x" + a[i].x + "y" + a[i].y] = a[i];
 
 			// Detect hole collision
-			if(self.gamedata.collisions.holes['x' + a[i].x + 'y' + a[i].y]){ self.gamedata.events[friendlyName].holes(a); }
+			if(this.gamedata.collisions.holes['x' + a[i].x + 'y' + a[i].y]){ this.gamedata.events[friendlyName].holes(a); }
 
 			// Detect goal collision
-			if(self.gamedata.collisions.goals['x' + a[i].x + 'y' + a[i].y]){ self.gamedata.events[friendlyName].goals(a); }
+			if(this.gamedata.collisions.goals['x' + a[i].x + 'y' + a[i].y]){ this.gamedata.events[friendlyName].goals(a); }
 
-			//console.log('Collision data: ', JSON.stringify(self.gamedata.collisions));
+			//console.log('Collision data: ', JSON.stringify(this.gamedata.collisions));
 
 		}
 
 	};
 
-	this.play = function(){
+	play() {
 
-		//console.log('self.gamedata.active: ', self.gamedata.active);
+		//console.log('this.gamedata.active: ', this.gamedata.active);
 
-		if(self.frame.master > 10000){ self.pause(); } // prevent infinite looping during debugging
+		if(this.state == 0 || this.state == 2){ return false; }
 
-		if(self.state == 0){ return false; }
+		this.frame.master++;
 
-		self.frame.master++;
+		//console.log(this.frame.master);
 
-		//console.log(self.frame.master);
-
-		if(self.frame.master % 2 == 0){
-			self.frame.mice++;
-			self.animate(self.gamedata.active.mice, self.frame.mice);
+		if(this.frame.master % 2 == 0){
+			this.frame.mice++;
+			this.animate(this.gamedata.active.mice, this.frame.mice);
 		}
-		if(self.frame.master % 3 == 0){
-			self.frame.cats++;
-			self.animate(self.gamedata.active.cats, self.frame.cats);
+		if(this.frame.master % 3 == 0){
+			this.frame.cats++;
+			this.animate(this.gamedata.active.cats, this.frame.cats);
 		}
 
-		if(self.frame.master % 20 == 0){
-			self.move(self.gamedata.active.mice, 'mice');
+		if(this.frame.master % 20 == 0){
+			this.move(this.gamedata.active.mice, 'mice');
 		}
-		if(self.frame.master % 30 == 0){
-			self.move(self.gamedata.active.cats, 'cats');
+		if(this.frame.master % 30 == 0){
+			this.move(this.gamedata.active.cats, 'cats');
 		}
-		if(self.frame.master % 20 == 0 || self.frame.master % 30 == 0){
-			self.detectCollisions();
+		if(this.frame.master % 20 == 0 || this.frame.master % 30 == 0){
+			this.detectCollisions();
 		}
 
 	};
 
-	this.pause = function(){
+	pause() {
 
 		this.state = 0;
 
 	};
 
-	this.processCollision = function(a, friendlyName, type){
+	processCollision(a, friendlyName, type) {
 
 	};
 
-	this.start = function(){
+	start() {
+
+		if (!this.state) {
+
+			let self = this;
+
+			(function animloop(){
+				requestAnimFrame(animloop);
+				self.play();
+			})();
+
+		}
 
 		this.state = 1;
 
-		(function animloop(){
-			requestAnimFrame(animloop);
-			self.play();
-		})();
-
 	};
 
-	this.stop = function(status){
+	stop(status) {
 
 		this.state = 2;
 
@@ -446,7 +455,7 @@ if(Meteor.isClient) {
 		};
 	})();
 
-	var test = new CCRGame();
+	let test = new CCRGame();
 	test.init(
 		{
 			arrows: {
@@ -465,20 +474,27 @@ if(Meteor.isClient) {
 			mice: [
 				{x: 0, y: 0, d: 1},
 				{x: 1, y: 0, d: 1},
-				{x: 2, y: 0, d: 1}
+				{x: 2, y: 0, d: 1},
+				{x: 11, y: 3, d: 3}
 			],
 			walls: [
-				{x: 0, y: 0, d: 2, t: 1},
-				{x: 2, y: 1, d: 1, t: 1},
-				{x: 2, y: 4, d: 2, t: 1},
-				{x: 1, y: 4, d: 3, t: 1},
-				{x: 11, y: 6, d: 2, t: 1},
-				{x: 2, y: 6, d: 3, t: 1},
-				{x: 2, y: 5, d: 1, t: 1},
-				{x: 2, y: 5, d: 3, t: 1},
-				{x: 5, y: 0, d: 1, t: 1},
-				{x: 4, y: 8, d: 3, t: 1},
-				{x: 4, y: 2, d: 0, t: 1}
+				{x: 0, y: 0, d: 2},
+				{x: 2, y: 1, d: 1},
+				{x: 2, y: 4, d: 2},
+				{x: 1, y: 4, d: 3},
+				{x: 11, y: 6, d: 2},
+				{x: 2, y: 6, d: 3},
+				{x: 2, y: 5, d: 1},
+				{x: 2, y: 5, d: 3},
+				{x: 5, y: 0, d: 1},
+				{x: 4, y: 8, d: 3},
+				{x: 4, y: 2, d: 0},
+				{x: 2, y: 7, d: 2},
+				{x: 8, y: 2, d: 1},
+				{x: 8, y: 7, d: 2},
+				{x: 6, y: 7, d: 3},
+				{x: 6, y: 4, d: 0},
+				{x: 5, y: 8, d: 3}
 			]
 		}
 	);

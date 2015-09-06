@@ -1,3 +1,6 @@
+@col1: #ffd;
+@col2: #fdf;
+
 * {
 	box-sizing: border-box;
 }
@@ -68,12 +71,14 @@ input[type=button] {
 		background-image: url('img/grid.png');
 		z-index: 1;
 		&.col1 {
-			background-color: #ffd;
-			background-image: url('img/col1.png');
+			background-color: @col1;
+			background: linear-gradient(135deg, @col1 0%, darken(@col1, 10%) 100%);
+			/*background-image: url('img/col1.png');*/
 		}
 		&.col2 {
-			background-color: #fdf;
-			background-image: url('img/col2.png');
+			background-color: @col2;
+			background: linear-gradient(135deg, @col2 0%, darken(@col2, 10%) 100%);
+			/*background-image: url('img/col2.png');*/
 		}
 	}
 	.hole {
