@@ -7,6 +7,12 @@ class CCRGame {
 
 	}
 
+	appendTo(target) {
+
+		$(target).append(this.gamedata.dom);
+
+	};
+
 	init(gamedata) {
 
 		if(!gamedata){ return false; }
@@ -179,12 +185,6 @@ class CCRGame {
 		//this.gamedata.active = JSON.parse(JSON.stringify(this.gamedata.original));
 		console.log('this.gamedata.original: ', this.gamedata.original);
 		console.log('this.gamedata.active: ', this.gamedata.active);
-
-	};
-
-	add(target) {
-
-		$(target).append(this.gamedata.dom);
 
 	};
 
@@ -517,9 +517,8 @@ if(Meteor.isClient) {
 	window.onload = function() {
 
 		test.initDOM();
-		test.add("#game");
+		test.appendTo("#game");
 		Session.set('gameIsReady', true);
-		test.start();
 
 	}
 
