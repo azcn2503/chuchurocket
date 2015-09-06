@@ -62,12 +62,13 @@ input[type=button] {
 		-webkit-transform: scale(0.75);
 	}
 	.goal {
-		background-color: #08f;
+		background-color: #f00;
 		border-radius: 25px;
 		z-index: 3;
 		-webkit-transform: scale(0.75);
 	}
 	.grid {
+		text-align: right;
 		background-image: url('img/grid.png');
 		z-index: 1;
 		&.col1 {
@@ -79,6 +80,12 @@ input[type=button] {
 			background-color: @col2;
 			background: linear-gradient(135deg, @col2 0%, darken(@col2, 10%) 100%);
 			/*background-image: url('img/col2.png');*/
+		}
+		span {
+			opacity: 0;
+		}
+		&:hover span {
+			opacity: 1;
 		}
 	}
 	.hole {
@@ -109,8 +116,9 @@ input[type=button] {
 		}
 	}
 	.wall {
-		background-color: #800;
+		border: 1px solid #800;
 		z-index: 4;
+		border-radius: 2px;
 	}
 }
 

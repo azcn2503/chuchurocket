@@ -96,6 +96,8 @@ class CCRGame {
 			mice: 0
 		};
 
+		this.wallThickness = 5;
+
 		this.state = 0;
 
 	};
@@ -241,7 +243,7 @@ class CCRGame {
 					.css("width", "50px")
 					.css("height", "50px")
 					.addClass((data.x + data.y) % 2 == 0 ? "col1" : "col2")
-					.text(data.x + "x" + data.y);
+					.html(`<span>${data.x}x${data.y}</span>`);
 				}
 				this.gamedata.grid.data["x" + data.x + "y" + data.y] = 1;
 			break;
@@ -256,10 +258,10 @@ class CCRGame {
 			case 'walls':
 				if (target) {
 					_el.prop('class', 'wall')
-					.css("margin-left", (data.d == 1 ? data.x * 50 + 49 : data.d == 3 ? data.x * 50 -2 : data.x * 50) + "px")
-					.css("margin-top", (data.d == 0 ? data.y * 50 - 2 : data.d == 2 ? data.y * 50 + 49 : data.y * 50) + "px")
-					.css("width", (data.d == 0 || data.d == 2 ? 50 : 3) + "px")
-					.css("height", (data.d == 1 || data.d == 3 ? 50 : 3) + "px");
+					.css("margin-left", (data.d == 1 ? data.x * 50 + (50 - this.wallThickness / 2) : data.d == 3 ? data.x * 50 - this.wallThickness / 2 : data.x * 50) + "px")
+					.css("margin-top", (data.d == 0 ? data.y * 50 - this.wallThickness / 2 : data.d == 2 ? data.y * 50 + (50 - this.wallThickness / 2) : data.y * 50) + "px")
+					.css("width", (data.d == 0 || data.d == 2 ? 50 : this.wallThickness) + "px")
+					.css("height", (data.d == 1 || data.d == 3 ? 50 : this.wallThickness) + "px");
 				}
 				data.t = data.t || 1;
 				this.gamedata.collisions.walls["x" + data.x + "y" + data.y + "d" + data.d] = data.t;
