@@ -5,6 +5,42 @@ class CCRGame {
 		this.gamedata = {};
 		this.initData = {};
 
+		this.directions = {
+
+			// 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None
+
+			// When processing wall collisions, check walls in these directions
+			// { current_direction: [ direction_1, direction_2, direction_3 ] }
+			check: {0: [0, 1, 3], 1: [1, 2, 0], 2: [2, 3, 1], 3: [3, 0, 2]},
+
+			// Calculate the new direction based on number of wall collisions
+			// { current_direction: { number_of_hits: new_direction }
+			hits: {0: {1: 1, 2: 3, 3: 2, 4: -1}, 1: {1: 2, 2: 0, 3: 3, 4: -1}, 2: {1: 3, 2: 1, 3: 0, 4: -1}, 3: {1: 0, 2: 2, 3: 1, 4: -1}},
+
+			// Next directions
+			// { current_direction: next_direction }
+			next: {0: 1, 1: 2, 2: 3, 3: 0},
+
+			// Opposite directions
+			// { current_direction: opposite_direction }
+			opp: {0: 2, 1: 3, 2: 0, 3: 1},
+
+			// Previous directions
+			// { current_direction: previous_direction }
+			prev: {0: 3, 1: 0, 2: 1, 3: 2}
+
+		};
+
+		this.frame = {
+			master: 0,
+			cats: 0,
+			mice: 0
+		};
+
+		this.wallThickness = 5;
+
+		this.state = 0;
+
 	}
 
 	appendTo(target) {
@@ -63,42 +99,6 @@ class CCRGame {
 				walls: []
 			}
 		};
-
-		this.directions = {
-
-			// 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None
-
-			// When processing wall collisions, check walls in these directions
-			// { current_direction: [ direction_1, direction_2, direction_3 ] }
-			check: {0: [0, 1, 3], 1: [1, 2, 0], 2: [2, 3, 1], 3: [3, 0, 2]},
-
-			// Calculate the new direction based on number of wall collisions
-			// { current_direction: { number_of_hits: new_direction }
-			hits: {0: {1: 1, 2: 3, 3: 2, 4: -1}, 1: {1: 2, 2: 0, 3: 3, 4: -1}, 2: {1: 3, 2: 1, 3: 0, 4: -1}, 3: {1: 0, 2: 2, 3: 1, 4: -1}},
-
-			// Next directions
-			// { current_direction: next_direction }
-			next: {0: 1, 1: 2, 2: 3, 3: 0},
-
-			// Opposite directions
-			// { current_direction: opposite_direction }
-			opp: {0: 2, 1: 3, 2: 0, 3: 1},
-
-			// Previous directions
-			// { current_direction: previous_direction }
-			prev: {0: 3, 1: 0, 2: 1, 3: 2}
-
-		};
-
-		this.frame = {
-			master: 0,
-			cats: 0,
-			mice: 0
-		};
-
-		this.wallThickness = 5;
-
-		this.state = 0;
 
 	};
 
@@ -261,7 +261,8 @@ class CCRGame {
 					.css("margin-left", (data.d == 1 ? data.x * 50 + (50 - this.wallThickness / 2) : data.d == 3 ? data.x * 50 - this.wallThickness / 2 : data.x * 50) + "px")
 					.css("margin-top", (data.d == 0 ? data.y * 50 - this.wallThickness / 2 : data.d == 2 ? data.y * 50 + (50 - this.wallThickness / 2) : data.y * 50) + "px")
 					.css("width", (data.d == 0 || data.d == 2 ? 50 : this.wallThickness) + "px")
-					.css("height", (data.d == 1 || data.d == 3 ? 50 : this.wallThickness) + "px");
+					.css("height", (data.d == 1 || data.d == 3 ? 50 : this.wallThickness) + "px")
+					.prop('title', `x${data.x} y${data.y} d${data.d}`);
 				}
 				data.t = data.t || 1;
 				this.gamedata.collisions.walls["x" + data.x + "y" + data.y + "d" + data.d] = data.t;
@@ -422,12 +423,11 @@ class CCRGame {
 
 		if (!this.state) {
 
-			let self = this;
-
-			(function animloop(){
+			let animloop = () => {
 				requestAnimFrame(animloop);
-				self.play();
-			})();
+				this.play();
+			};
+			animloop();
 
 		}
 
@@ -495,8 +495,7 @@ if(Meteor.isClient) {
 				{x: 8, y: 2, d: 1},
 				{x: 8, y: 7, d: 2},
 				{x: 6, y: 7, d: 3},
-				{x: 6, y: 4, d: 0},
-				{x: 5, y: 8, d: 3}
+				{x: 6, y: 4, d: 0}
 			]
 		}
 	);
