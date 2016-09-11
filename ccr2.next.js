@@ -388,22 +388,25 @@ class CCRGame {
 
 		//console.log(this.frame.master);
 
+		// Animate mice
 		if(this.frame.master % 2 == 0){
 			this.frame.mice++;
 			this.animate(this.gamedata.active.mice, this.frame.mice);
 		}
+		// Animate cats
 		if(this.frame.master % 3 == 0){
 			this.frame.cats++;
 			this.animate(this.gamedata.active.cats, this.frame.cats);
 		}
 
+		// Move mice
 		if(this.frame.master % 20 == 0){
 			this.move(this.gamedata.active.mice, 'mice');
+			this.detectCollisions();
 		}
+		// Move cats
 		if(this.frame.master % 30 == 0){
 			this.move(this.gamedata.active.cats, 'cats');
-		}
-		if(this.frame.master % 20 == 0 || this.frame.master % 30 == 0){
 			this.detectCollisions();
 		}
 
