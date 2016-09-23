@@ -39,19 +39,20 @@ class CCRGame {
 
 		this.wallThickness = 5;
 
-		this.state = 0;
+		this.state = 'stopped';
 
 	}
 
-	appendTo(target) {
+	AppendToTarget (target) {
 
+		$(target).html('');
 		$(target).append(this.gamedata.dom);
 
 	};
 
-	init(gamedata) {
+	Init (gamedata) {
 
-		if(!gamedata){ return false; }
+		if (!gamedata) { return false; }
 
 		this.initData = gamedata;
 
@@ -102,7 +103,7 @@ class CCRGame {
 
 	};
 
-	initDOM() {
+	InitDOM() {
 
 		// Create wrapper
 		let _ccr_wrapper = ce("div")
@@ -117,7 +118,7 @@ class CCRGame {
 		// Populate grid
 		for(let i = 0; i < this.gamedata.grid.x; i ++){
 			for(let j = 0; j < this.gamedata.grid.y; j ++){
-				this.addItem("grid", {x: i, y: j}, _grid_wrapper);
+				this.AddItem("grid", {x: i, y: j}, _grid_wrapper);
 			}
 		}
 
@@ -129,16 +130,16 @@ class CCRGame {
 		for(let i = 0; i < this.gamedata.grid.x; i ++){
 			for(let j = 0; j < this.gamedata.grid.y; j ++){
 				if(!this.gamedata.grid.data["x" + i + "y" + (j-1)]){ // No grid square above
-					this.addItem("walls", {x: i, y: j, d: 0, t: 1}, _wall_wrapper);
+					this.AddItem("walls", {x: i, y: j, d: 0, t: 1}, _wall_wrapper);
 				}
 				if(!this.gamedata.grid.data["x" + i + "y" + (j+1)]){ // No grid square below
-					this.addItem("walls", {x: i, y: j, d: 2, t: 1}, _wall_wrapper);
+					this.AddItem("walls", {x: i, y: j, d: 2, t: 1}, _wall_wrapper);
 				}
 				if(!this.gamedata.grid.data["x" + (i+1) + "y" + (j)]){ // No grid square to right
-					this.addItem("walls", {x: i, y: j, d: 1, t: 1}, _wall_wrapper);
+					this.AddItem("walls", {x: i, y: j, d: 1, t: 1}, _wall_wrapper);
 				}
 				if(!this.gamedata.grid.data["x" + (i-1) + "y" + (j)]){ // No grid square to left
-					this.addItem("walls", {x: i, y: j, d: 3, t: 1}, _wall_wrapper);
+					this.AddItem("walls", {x: i, y: j, d: 3, t: 1}, _wall_wrapper);
 				}
 			}
 		}
@@ -153,7 +154,7 @@ class CCRGame {
 
 		for (let i in items) {
 			for (let j in this.initData[items[i].type]) {
-				this.addItem(items[i].type, this.initData[items[i].type][j], items[i].container);
+				this.AddItem(items[i].type, this.initData[items[i].type][j], items[i].container);
 			}
 		}
 
@@ -184,22 +185,23 @@ class CCRGame {
 		this.gamedata.dom = _ccr_wrapper;
 
 		// Clone the gamedata
-		//this.gamedata.active = JSON.parse(JSON.stringify(this.gamedata.original));
-		console.log('this.gamedata.original: ', this.gamedata.original);
-		console.log('this.gamedata.active: ', this.gamedata.active);
+		// this.gamedata.active = JSON.parse(JSON.stringify(this.gamedata.original));
+		// console.log('this.gamedata.original: ', this.gamedata.original);
+		// console.log('this.gamedata.active: ', this.gamedata.active);
+		this.AppendToTarget(this.initData.target);
 
 	};
 
-	addGameData(type, obj) {
+	AddGameData(type, obj) {
 
 		this.gamedata.original[type].push(obj);
 		this.gamedata.active[type].push(obj);
 
 	};
 
-	addItem(type, data, target) {
+	AddItem(type, data, target) {
 
-		console.log('Adding item: ', type, data, target);
+		// console.log('Adding item: ', type, data, target);
 
 		let _el = null;
 
@@ -217,7 +219,7 @@ class CCRGame {
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				this.addGameData(type, { x: data.x, y: data.y, d: data.d, obj: _el });
+				this.AddGameData(type, { x: data.x, y: data.y, d: data.d, obj: _el });
 			break;
 			case 'holes':
 				if (target) {
@@ -225,7 +227,7 @@ class CCRGame {
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				this.addGameData(type, {x: data.x, y: data.y, obj: _el});
+				this.AddGameData(type, {x: data.x, y: data.y, obj: _el});
 				this.gamedata.collisions.holes['x' + data.x + 'y' + data.y] = 1;
 			break;
 			case 'goals':
@@ -234,7 +236,7 @@ class CCRGame {
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				this.addGameData(type, {x: data.x, y: data.y, obj: _el});
+				this.AddGameData(type, {x: data.x, y: data.y, obj: _el});
 				this.gamedata.collisions.goals['x' + data.x + 'y' + data.y] = 1;
 			break;
 			case 'grid':
@@ -253,7 +255,7 @@ class CCRGame {
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				this.addGameData(type, {x: data.x, y: data.y, d: data.d, obj: _el});
+				this.AddGameData(type, {x: data.x, y: data.y, d: data.d, obj: _el});
 			break;
 			case 'walls':
 				if (target) {
@@ -275,7 +277,7 @@ class CCRGame {
 
 	};
 
-	animate(a, frame) {
+	Animate (a, frame) {
 
 		// Update the DOM with new gamedata movements and smooth things out
 
@@ -295,7 +297,7 @@ class CCRGame {
 
 	};
 
-	detectCollisions() {
+	DetectCollisions () {
 
 		for(let i in this.gamedata.collisions.mice){
 
@@ -309,7 +311,7 @@ class CCRGame {
 
 	};
 
-	move(a, friendlyName) {
+	Move (a, friendlyName) {
 
 		// Move gamedata, but don't animate them.
 
@@ -339,7 +341,7 @@ class CCRGame {
 				let checkd = this.directions.check[d];
 				let hits = 0;
 				// Find out how many walls we will hit
-				for(let i = 0, checkdl = checkd.length; i < checkdl; i++) {
+				for (let i = 0, checkdl = checkd.length; i < checkdl; i++) {
 					if (checkCollidibleWalls(x, y, checkd[i])) {
 						hits++;
 					}
@@ -378,75 +380,80 @@ class CCRGame {
 
 	};
 
-	play() {
-
-		//console.log('this.gamedata.active: ', this.gamedata.active);
-
-		if(this.state == 0 || this.state == 2){ return false; }
+	Play () {
 
 		this.frame.master++;
-
-		//console.log(this.frame.master);
 
 		// Animate mice
 		if(this.frame.master % 2 == 0){
 			this.frame.mice++;
-			this.animate(this.gamedata.active.mice, this.frame.mice);
+			this.Animate(this.gamedata.active.mice, this.frame.mice);
 		}
 		// Animate cats
 		if(this.frame.master % 3 == 0){
 			this.frame.cats++;
-			this.animate(this.gamedata.active.cats, this.frame.cats);
+			this.Animate(this.gamedata.active.cats, this.frame.cats);
 		}
 
 		// Move mice
 		if(this.frame.master % 20 == 0){
-			this.move(this.gamedata.active.mice, 'mice');
-			this.detectCollisions();
+			this.Move(this.gamedata.active.mice, 'mice');
+			this.DetectCollisions();
 		}
 		// Move cats
 		if(this.frame.master % 30 == 0){
-			this.move(this.gamedata.active.cats, 'cats');
-			this.detectCollisions();
+			this.Move(this.gamedata.active.cats, 'cats');
+			this.DetectCollisions();
 		}
 
-	};
-
-	pause() {
-
-		this.state = 0;
-
-	};
-
-	processCollision(a, friendlyName, type) {
+		setTimeout( () => {
+			if (this.state == 'started') {
+				this.Play();
+			}
+		});
 
 	};
 
-	start() {
+	Pause () {
 
-		if (!this.state) {
+		this.state = 'paused';
 
-			let animloop = () => {
-				requestAnimFrame(animloop);
-				this.play();
-			};
-			animloop();
+	};
 
+	ProcessCollision (a, friendlyName, type) {
+
+	};
+
+	Start () {
+
+		if (this.state == 'stopped' || this.state == 'paused') {
+			this.Play();
 		}
 
-		this.state = 1;
+		this.state = 'started';
 
 	};
 
-	stop(status) {
+	Stop (status) {
 
-		this.state = 2;
+		if (this.state == 'stopped') {
+			this.Reset();
+		}
+
+		this.state = 'stopped';
 
 	};
+
+	Reset () {
+
+		this.Init(this.initData);
+		this.InitDOM();
+
+	}
 
 };
 
-if(Meteor.isClient) {
+if (Meteor.isClient) {
 
 	Session.set('gameIsReady', false);
 
@@ -454,15 +461,10 @@ if(Meteor.isClient) {
 		return $(document.createElement(s));
 	}
 
-	window.requestAnimFrame = (function(){
-		return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || function(callback){
-			window.setTimeout(callback, 1000 / 60);
-		};
-	})();
-
 	let test = new CCRGame();
-	test.init(
+	test.Init(
 		{
+			target: '#game',
 			arrows: {
 				available: {0: 2, 1: 3, 2: 1, 3: 1}
 			},
@@ -504,24 +506,23 @@ if(Meteor.isClient) {
 	);
 
 	Template.playback.helpers({
-		'gameIsReady': function() {
+		'gameIsReady': () => {
 			return Session.get('gameIsReady');
 		}
 	});
 
 	Template.playback.events({
-		'click input[name=play]': function() {
-			test.start();
+		'click input[name=play]': () => {
+			test.Start();
 		},
-		'click input[name=stop]': function() {
-			test.stop();
+		'click input[name=stop]': () => {
+			test.Stop();
 		}
 	});
 
-	window.onload = function() {
+	window.onload = () => {
 
-		test.initDOM();
-		test.appendTo("#game");
+		test.InitDOM();
 		Session.set('gameIsReady', true);
 
 	}
