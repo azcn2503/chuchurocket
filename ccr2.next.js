@@ -58,14 +58,16 @@ class CCRGame {
 				walls: {}
 			},
 			dom: null,
-			events: {
-				cats: {
-					holes: (a) => { console.log('Laugh at silly cat'); },
-					goals: (a) => { console.log('You is fail'); }
+			collisionEvents: {
+				cat: {
+					hole: (a) => { console.log('Laugh at silly cat'); },
+					goal: (a) => { console.log('You is fail'); },
+					mouse: (a) => { console.log('The cat ate the mouse'); }
 				},
-				mice: {
-					holes: (a) => { console.log('Poor little mouse'); },
-					goals: (a) => { console.log('You are win'); }
+				mouse: {
+					cat: (a) => { console.log('The mouse went in to the cat'); },
+					hole: (a) => { console.log('Poor little mouse'); },
+					goal: (a) => { console.log('You are win'); }
 				}
 			},
 			grid: {
@@ -191,6 +193,7 @@ class CCRGame {
 
 		this.gamedata.original[type].push(obj);
 		this.gamedata.active[type].push(obj);
+		this.gamedata.collisions[type][`x${obj.x}y${obj.y}`] = obj;
 
 	};
 
@@ -223,7 +226,7 @@ class CCRGame {
 					.css("height", "50px");
 				}
 				this.AddGameData(type, {x: data.x, y: data.y, obj: _el});
-				this.gamedata.collisions.holes['x' + data.x + 'y' + data.y] = 1;
+				//this.gamedata.collisions.holes['x' + data.x + 'y' + data.y] = 1;
 			break;
 			case 'goals':
 				if (target) {
@@ -232,7 +235,7 @@ class CCRGame {
 					.css("height", "50px");
 				}
 				this.AddGameData(type, {x: data.x, y: data.y, obj: _el});
-				this.gamedata.collisions.goals['x' + data.x + 'y' + data.y] = 1;
+				//this.gamedata.collisions.goals['x' + data.x + 'y' + data.y] = 1;
 			break;
 			case 'grid':
 				if (target) {
@@ -295,7 +298,20 @@ class CCRGame {
 	DetectCollisions (obj1, obj2) {
 		for (let i in obj1){
 			if (obj2.hasOwnProperty(i)){
-				console.log(`Collision occurred at: ${obj1[i].x}x${obj1[i].y}, between ${obj1[i].obj[0].className} and ${obj2[i].obj[0].className}`);
+				//console.log(obj1[i], obj2[i]);
+				//console.log(`Collision occurred at: ${obj1[i].x}x${obj1[i].y}, between ${obj1[i].obj[0].className} and ${obj2[i].obj[0].className}`);
+				const class1 = obj1[i].obj[0].className;
+				const class2 = obj2[i].obj[0].className;
+				console.log(`Collision detected: ${class1} -> ${class2}`);
+				if (!this.gamedata.collisionEvents.hasOwnProperty(class1)) {
+					console.log(`No collision event for ${class1}`);
+					continue;
+				}
+				if (!this.gamedata.collisionEvents[class1].hasOwnProperty(class2)) {
+					console.log(`No collision event for ${class1}.${class2}`);
+					continue;
+				}
+				this.gamedata.collisionEvents[class1][class2](obj1, obj2);
 			}
 		}
 	};
@@ -359,12 +375,6 @@ class CCRGame {
 			// Update collisions
 			this.gamedata.collisions[friendlyName]["x" + a[i].x + "y" + a[i].y] = a[i];
 
-			// Detect hole collision
-			if(this.gamedata.collisions.holes['x' + a[i].x + 'y' + a[i].y]){ this.gamedata.events[friendlyName].holes(a); }
-
-			// Detect goal collision
-			if(this.gamedata.collisions.goals['x' + a[i].x + 'y' + a[i].y]){ this.gamedata.events[friendlyName].goals(a); }
-
 			//console.log('Collision data: ', JSON.stringify(this.gamedata.collisions));
 
 		}
@@ -389,11 +399,15 @@ class CCRGame {
 		if(this.frame.master % 20 == 0){
 			this.Move(this.gamedata.active.mice, 'mice');
 			this.DetectCollisions(this.gamedata.collisions.mice, this.gamedata.collisions.cats);
+			this.DetectCollisions(this.gamedata.collisions.mice, this.gamedata.collisions.holes);
+			this.DetectCollisions(this.gamedata.collisions.mice, this.gamedata.collisions.goals);
 		}
 		// Move cats
 		if(this.frame.master % 30 == 0){
 			this.Move(this.gamedata.active.cats, 'cats');
 			this.DetectCollisions(this.gamedata.collisions.cats, this.gamedata.collisions.mice);
+			this.DetectCollisions(this.gamedata.collisions.cats, this.gamedata.collisions.holes);
+			this.DetectCollisions(this.gamedata.collisions.cats, this.gamedata.collisions.goals);
 		}
 
 		setTimeout( () => {
@@ -508,11 +522,9 @@ if (Meteor.isClient) {
 		}
 	});
 
-	window.onload = () => {
-
+	window.addEventListener('load', () => {
 		test.InitDOM();
 		Session.set('gameIsReady', true);
-
-	}
+	});
 
 }
