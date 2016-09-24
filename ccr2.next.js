@@ -1,7 +1,6 @@
 class CCRGame {
 
 	constructor() {
-
 		this.gamedata = {};
 		this.initData = {};
 
@@ -31,27 +30,16 @@ class CCRGame {
 
 		};
 
-		this.frame = {
-			master: 0,
-			cats: 0,
-			mice: 0
-		};
-
 		this.wallThickness = 5;
-
-		this.state = 'stopped';
-
+		this.animationDelay = 16;
 	}
 
 	AppendToTarget (target) {
-
 		$(target).html('');
 		$(target).append(this.gamedata.dom);
-
 	};
 
 	Init (gamedata) {
-
 		if (!gamedata) { return false; }
 
 		this.initData = gamedata;
@@ -101,34 +89,41 @@ class CCRGame {
 			}
 		};
 
+		this.frame = {
+			master: 0,
+			cats: 0,
+			mice: 0
+		};
+
+		this.state = 'stopped';
 	};
 
 	InitDOM() {
 
 		// Create wrapper
-		let _ccr_wrapper = ce("div")
+		const _ccr_wrapper = ce("div")
 		.css("width", this.gamedata.grid.x * 50 + "px")
 		.css("height", this.gamedata.grid.y * 50 + 50 + "px")
 		.prop("class", "ccr_wrapper");
 
 		// Create grid wrapper
-		let _grid_wrapper = ce("div")
+		const _grid_wrapper = ce("div")
 		.prop("class", "grid_wrapper");
 
 		// Populate grid
-		for(let i = 0; i < this.gamedata.grid.x; i ++){
-			for(let j = 0; j < this.gamedata.grid.y; j ++){
+		for (let i = 0; i < this.gamedata.grid.x; i ++){
+			for (let j = 0; j < this.gamedata.grid.y; j ++){
 				this.AddItem("grid", {x: i, y: j}, _grid_wrapper);
 			}
 		}
 
 		// Create wall wrapper
-		let _wall_wrapper = ce("div")
+		const _wall_wrapper = ce("div")
 		.prop("class", "wall_wrapper");
 
 		// Create wall boundaries
-		for(let i = 0; i < this.gamedata.grid.x; i ++){
-			for(let j = 0; j < this.gamedata.grid.y; j ++){
+		for (let i = 0; i < this.gamedata.grid.x; i ++){
+			for (let j = 0; j < this.gamedata.grid.y; j ++){
 				if(!this.gamedata.grid.data["x" + i + "y" + (j-1)]){ // No grid square above
 					this.AddItem("walls", {x: i, y: j, d: 0, t: 1}, _wall_wrapper);
 				}
@@ -144,7 +139,7 @@ class CCRGame {
 			}
 		}
 
-		let items = [
+		const items = [
 			{ container: _grid_wrapper, type: 'cats' },
 			{ container: _grid_wrapper, type: 'goals' },
 			{ container: _grid_wrapper, type: 'holes' },
@@ -159,18 +154,18 @@ class CCRGame {
 		}
 
 		// Create toolbar
-		let _toolbar = ce("div")
+		const _toolbar = ce("div")
 		.prop("class", "toolbar")
 		.css("margin-top", this.gamedata.grid.y * 50 + "px")
 		.css("position", "absolute");
 
 		// Create arrows
-		let _arrows = ce("div");
-		for(let i in this.gamedata.arrows.available){
-			let _arrow = ce("div")
+		const _arrows = ce("div");
+		for (let i in this.gamedata.arrows.available){
+			const _arrow = ce("div")
 			.prop("class", "arrow")
 			.addClass("dir" + i);
-			let _label = ce("div")
+			const _label = ce("div")
 			.prop("class", "label")
 			.addClass("shadowtext")
 			.text(this.gamedata.arrows.available[i]);
@@ -283,9 +278,9 @@ class CCRGame {
 
 		frame = frame % 10;
 
-		if(frame == 0){ frame = 10; }
+		if (frame == 0){ frame = 10; }
 
-		for(let i = 0, al = a.length; i < al; i++){
+		for (let i = 0, al = a.length; i < al; i++){
 
 			if (!a[i] || !a[i].obj || !a[i].obj.css) { continue; }
 
@@ -297,73 +292,69 @@ class CCRGame {
 
 	};
 
-	DetectCollisions () {
-
-		for(let i in this.gamedata.collisions.mice){
-
-			if(this.gamedata.collisions.cats[i]){
-
-				console.log("wip");
-
+	DetectCollisions (obj1, obj2) {
+		for (let i in obj1){
+			if (obj2.hasOwnProperty(i)){
+				console.log(`Collision occurred at: ${obj1[i].x}x${obj1[i].y}, between ${obj1[i].obj[0].className} and ${obj2[i].obj[0].className}`);
 			}
+		}
+	};
 
+	CheckCollidibleWalls (x, y, d) {
+
+		// Checks for walls directly in front of us.
+		// Given 2,2,0 it will check 2,2,0 and 2,1,2 for example.
+
+		if (this.gamedata.collisions.walls['x' + x + 'y' + y + 'd' + d]) {
+			return true;
 		}
 
-	};
+		const nextX = x + (d == 1 ? 1 : d == 3 ? -1 : 0);
+		const nextY = y + (d == 0 ? -1 : d == 2 ? 1 : 0);
+		const nextD = this.directions.opp[d];
+
+		if (this.gamedata.collisions.walls['x' + nextX + 'y' + nextY + 'd' + nextD]) {
+			return true;
+		}
+
+	}
+
+	UpdateDirection (x, y, d) {
+
+		// Check if there is a wall directly in front of us (check the current grid square, and the grid square ahead of us)
+		if (this.CheckCollidibleWalls(x, y, d)){
+			const checkd = this.directions.check[d];
+			const checkdl = checkd.length;
+			let hits = 0;
+			let i = 0;
+			// Find out how many walls we will hit
+			for (i = 0; i < checkdl; i++) {
+				if (this.CheckCollidibleWalls(x, y, checkd[i])) {
+					hits++;
+				}
+				else { break; }
+			}
+			// Return the new direction based on the number of walls we hit
+			return this.directions.hits[d][hits];
+		}
+		return d;
+
+	}
 
 	Move (a, friendlyName) {
 
 		// Move gamedata, but don't animate them.
 
-		let checkCollidibleWalls = (x, y, d) => {
-
-			// Checks for walls directly in front of us.
-			// Given 2,2,0 it will check 2,2,0 and 2,1,2 for example.
-
-			if (this.gamedata.collisions.walls['x' + x + 'y' + y + 'd' + d]) {
-				return true;
-			}
-
-			let nextX = x + (d == 1 ? 1 : d == 3 ? -1 : 0);
-			let nextY = y + (d == 0 ? -1 : d == 2 ? 1 : 0);
-			let nextD = this.directions.opp[d];
-
-			if (this.gamedata.collisions.walls['x' + nextX + 'y' + nextY + 'd' + nextD]) {
-				return true;
-			}
-
-		};
-
-		let updateDirection = (x, y, d) => {
-
-			// Check if there is a wall directly in front of us (check the current grid square, and the grid square ahead of us)
-			if (checkCollidibleWalls(x, y, d)){
-				let checkd = this.directions.check[d];
-				let hits = 0;
-				// Find out how many walls we will hit
-				for (let i = 0, checkdl = checkd.length; i < checkdl; i++) {
-					if (checkCollidibleWalls(x, y, checkd[i])) {
-						hits++;
-					}
-					else { break; }
-				}
-				// Return the new direction based on the number of walls we hit
-				return this.directions.hits[d][hits];
-			}
-			return d;
-
-		};
-
 		this.gamedata.collisions[friendlyName] = {};
 
-		for(let i = 0, al = a.length; i < al; i++){
+		for (let i = 0, al = a.length; i < al; i++){
 
 			// Update coordinate
 			a[i].x += (a[i].d == 1 ? 1 : a[i].d == 3 ? -1 : 0);
 			a[i].y += (a[i].d == 0 ? -1 : a[i].d == 2 ? 1 : 0);
 
 			// Update direction
-			a[i].d = updateDirection(a[i].x, a[i].y, a[i].d);
+			a[i].d = this.UpdateDirection(a[i].x, a[i].y, a[i].d);
 
 			// Update collisions
 			this.gamedata.collisions[friendlyName]["x" + a[i].x + "y" + a[i].y] = a[i];
@@ -381,7 +372,6 @@ class CCRGame {
 	};
 
 	Play () {
-
 		this.frame.master++;
 
 		// Animate mice
@@ -398,26 +388,23 @@ class CCRGame {
 		// Move mice
 		if(this.frame.master % 20 == 0){
 			this.Move(this.gamedata.active.mice, 'mice');
-			this.DetectCollisions();
+			this.DetectCollisions(this.gamedata.collisions.mice, this.gamedata.collisions.cats);
 		}
 		// Move cats
 		if(this.frame.master % 30 == 0){
 			this.Move(this.gamedata.active.cats, 'cats');
-			this.DetectCollisions();
+			this.DetectCollisions(this.gamedata.collisions.cats, this.gamedata.collisions.mice);
 		}
 
 		setTimeout( () => {
 			if (this.state == 'started') {
 				this.Play();
 			}
-		});
-
+		}, this.animationDelay);
 	};
 
 	Pause () {
-
 		this.state = 'paused';
-
 	};
 
 	ProcessCollision (a, friendlyName, type) {
@@ -425,30 +412,31 @@ class CCRGame {
 	};
 
 	Start () {
-
 		if (this.state == 'stopped' || this.state == 'paused') {
+			this.animationDelay = 16;
 			this.Play();
 		}
-
+		if (this.state == 'started') {
+			this.Dash();
+		}
 		this.state = 'started';
-
 	};
 
-	Stop (status) {
+	Dash () {
+		this.animationDelay = 6;
+	}
 
+	Stop (status) {
 		if (this.state == 'stopped') {
 			this.Reset();
 		}
 
 		this.state = 'stopped';
-
 	};
 
 	Reset () {
-
 		this.Init(this.initData);
 		this.InitDOM();
-
 	}
 
 };
