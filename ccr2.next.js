@@ -42,23 +42,20 @@ class CCRGame {
 	Init (gamedata) {
 		if (!gamedata) { return false; }
 
-		this.initData = gamedata;
+		const createArrows = () => {
+			let available = {};
+			let placed = {};
+			if (typeof(gamedata.arrows.available) === 'undefined') { gamedata.arrows.available = {}; }
+			if (typeof(gamedata.arrows.placed) === 'undefined') { gamedata.arrows.placed = {}; }
+			for (let i = 0; i < 4; i += 1) {
+				available[i] = typeof(gamedata.arrows.available[i]) !== 'undefined' ? gamedata.arrows.available[i] : 0;
+				placed[i] = typeof(gamedata.arrows.placed[i]) !== 'undefined' ? gamedata.arrows.placed[i] : [];
+			}
+			return { available, placed };
+		};
 
-		// Create the gamedata
-		this.gamedata = {
-			arrows: {
-				available: {0: 0, 1: 0, 2: 0, 3: 0},
-				placed: {0: [], 1: [], 2: [], 3: []}
-			},
-			collisions: {
-				cats: {},
-				goals: {},
-				holes: {},
-				mice: {},
-				walls: {}
-			},
-			dom: null,
-			collisionEvents: {
+		const createCollisionEvents = () => {
+			return {
 				cat: {
 					hole: (a) => { console.log('Laugh at silly cat'); },
 					goal: (a) => { console.log('You is fail'); },
@@ -69,26 +66,38 @@ class CCRGame {
 					hole: (a) => { console.log('Poor little mouse'); },
 					goal: (a) => { console.log('You are win'); }
 				}
-			},
-			grid: {
+			};
+		};
+
+		const createGrid = () => {
+			return {
 				data: {},
 				x: 12,
 				y: 9
-			},
-			original: {
+			};
+		};
+
+		const createItems = () => {
+			return {
 				cats: [],
 				goals: [],
 				holes: [],
 				mice: [],
 				walls: []
-			},
-			active: {
-				cats: [],
-				goals: [],
-				holes: [],
-				mice: [],
-				walls: []
-			}
+			};
+		};
+
+		this.initData = gamedata;
+
+		// Create the gamedata
+		this.gamedata = {
+			arrows: createArrows(),
+			collisions: {},
+			dom: null,
+			collisionEvents: createCollisionEvents(),
+			grid: createGrid(),
+			original: createItems(),
+			active: createItems()
 		};
 
 		this.frame = {
@@ -210,6 +219,9 @@ class CCRGame {
 			.css("position", "absolute");
 		}
 
+		// Create a collisions object for this type if it doesn't exist
+		this.gamedata.collisions[type] = this.gamedata.collisions[type] || {};
+
 		switch (type) {
 			case 'cats':
 				if (target) {
@@ -276,23 +288,17 @@ class CCRGame {
 	};
 
 	Animate (a, frame) {
-
 		// Update the DOM with new gamedata movements and smooth things out
-
 		frame = frame % 10;
-
 		if (frame == 0){ frame = 10; }
-
-		for (let i = 0, al = a.length; i < al; i++){
-
+		let i = 0;
+		let al = a.length;
+		for (i = 0; i < al; i++){
 			if (!a[i] || !a[i].obj || !a[i].obj.css) { continue; }
-
 			a[i].obj
 			.css("margin-left", a[i].x * 50 + (a[i].d == 1 ? frame * 5 : a[i].d == 3 ? - frame * 5 : 0) + "px")
 			.css("margin-top", a[i].y * 50 + (a[i].d == 0 ? - frame * 5 : a[i].d == 2 ? frame * 5 : 0) + "px");
-
 		}
-
 	};
 
 	DetectCollisions (obj1, obj2) {
