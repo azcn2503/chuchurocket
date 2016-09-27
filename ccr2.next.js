@@ -5,7 +5,6 @@ class CCRGame {
 		this.initData = {};
 
 		this.directions = {
-
 			// 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None
 
 			// When processing wall collisions, check walls in these directions
@@ -27,16 +26,22 @@ class CCRGame {
 			// Previous directions
 			// { current_direction: previous_direction }
 			prev: {0: 3, 1: 0, 2: 1, 3: 2}
-
 		};
 
-		this.wallThickness = 5;
-		this.animationDelay = 16;
+		this.settings = {};
+		this.AddGameSetting('wallThickness', 5);
+		this.AddGameSetting('animationDelay', 16);
+		this.AddGameSetting('catsMoveInterval', 30);
+		this.AddGameSetting('miceMoveInterval', 20);
 	}
 
 	AppendToTarget (target) {
 		$(target).html('');
 		$(target).append(this.gamedata.dom);
+	};
+
+	AddGameSetting (name, value) {
+		this.settings[name] = value;
 	};
 
 	Init (gamedata) {
@@ -96,8 +101,7 @@ class CCRGame {
 			dom: null,
 			collisionEvents: createCollisionEvents(),
 			grid: createGrid(),
-			original: createItems(),
-			active: createItems()
+			items: createItems(),
 		};
 
 		this.frame = {
@@ -110,7 +114,6 @@ class CCRGame {
 	};
 
 	InitDOM() {
-
 		// Create wrapper
 		const _ccr_wrapper = ce("div")
 		.css("width", this.gamedata.grid.x * 50 + "px")
@@ -195,28 +198,37 @@ class CCRGame {
 		// console.log('this.gamedata.original: ', this.gamedata.original);
 		// console.log('this.gamedata.active: ', this.gamedata.active);
 		this.AppendToTarget(this.initData.target);
+	}
 
-	};
-
-	AddGameData(type, obj) {
-
-		this.gamedata.original[type].push(obj);
-		this.gamedata.active[type].push(obj);
+	AddGameData(type, obj, originalProperties = null) {
+		// Duplicate some properties from obj if originalProperties is populated
+		if (typeof(originalProperties) === 'object') {
+			obj.original = obj.original || {};
+			for (let i in originalProperties) {
+				obj.original[originalProperties[i]] = obj[originalProperties[i]];
+			}
+		}
+		// Add the object to the gamedata items
+		this.gamedata.items[type].push(obj);
+		// Add the object to the collisions object using its coordinates as the key (fast lookup)
 		this.gamedata.collisions[type][`x${obj.x}y${obj.y}`] = obj;
+	}
 
-	};
+	PositionItem (el, data) {
+		// Position an item according to its x, y and d properties
+		el.css('margin-left', `${data.x * 50}px`).css('margin-top', `${data.y * 50}px`);
+		return true;
+	}
 
-	AddItem(type, data, target) {
-
-		// console.log('Adding item: ', type, data, target);
-
+	AddItem (type, data, target) {
 		let _el = null;
 
 		if (target) {
+			// Create an element only if a target is specified
+			// this lets us run the game headless if omitted
 			_el = ce("div")
-			.css("margin-left", data.x * 50 + "px")
-			.css("margin-top", data.y * 50 + "px")
 			.css("position", "absolute");
+			this.PositionItem(_el, data);
 		}
 
 		// Create a collisions object for this type if it doesn't exist
@@ -229,7 +241,7 @@ class CCRGame {
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				this.AddGameData(type, { x: data.x, y: data.y, d: data.d, obj: _el });
+				this.AddGameData(type, { x: data.x, y: data.y, d: data.d, obj: _el }, ['x', 'y', 'd']);
 			break;
 			case 'holes':
 				if (target) {
@@ -265,15 +277,15 @@ class CCRGame {
 					.css("width", "50px")
 					.css("height", "50px");
 				}
-				this.AddGameData(type, {x: data.x, y: data.y, d: data.d, obj: _el});
+				this.AddGameData(type, {x: data.x, y: data.y, d: data.d, obj: _el }, ['x', 'y', 'd']);
 			break;
 			case 'walls':
 				if (target) {
 					_el.prop('class', 'wall')
-					.css("margin-left", (data.d == 1 ? data.x * 50 + (50 - this.wallThickness / 2) : data.d == 3 ? data.x * 50 - this.wallThickness / 2 : data.x * 50) + "px")
-					.css("margin-top", (data.d == 0 ? data.y * 50 - this.wallThickness / 2 : data.d == 2 ? data.y * 50 + (50 - this.wallThickness / 2) : data.y * 50) + "px")
-					.css("width", (data.d == 0 || data.d == 2 ? 50 : this.wallThickness) + "px")
-					.css("height", (data.d == 1 || data.d == 3 ? 50 : this.wallThickness) + "px")
+					.css("margin-left", (data.d == 1 ? data.x * 50 + (50 - this.settings.wallThickness / 2) : data.d == 3 ? data.x * 50 - this.settings.wallThickness / 2 : data.x * 50) + "px")
+					.css("margin-top", (data.d == 0 ? data.y * 50 - this.settings.wallThickness / 2 : data.d == 2 ? data.y * 50 + (50 - this.settings.wallThickness / 2) : data.y * 50) + "px")
+					.css("width", (data.d == 0 || data.d == 2 ? 50 : this.settings.wallThickness) + "px")
+					.css("height", (data.d == 1 || data.d == 3 ? 50 : this.settings.wallThickness) + "px")
 					.prop('title', `x${data.x} y${data.y} d${data.d}`);
 				}
 				data.t = data.t || 1;
@@ -284,8 +296,7 @@ class CCRGame {
 		if (target && _el) {
 			target.append(_el);
 		}
-
-	};
+	}
 
 	Animate (a, frame) {
 		// Update the DOM with new gamedata movements and smooth things out
@@ -295,11 +306,12 @@ class CCRGame {
 		let al = a.length;
 		for (i = 0; i < al; i++){
 			if (!a[i] || !a[i].obj || !a[i].obj.css) { continue; }
+			// TODO: Make this use PositionItem somehow to reuse that code
 			a[i].obj
 			.css("margin-left", a[i].x * 50 + (a[i].d == 1 ? frame * 5 : a[i].d == 3 ? - frame * 5 : 0) + "px")
 			.css("margin-top", a[i].y * 50 + (a[i].d == 0 ? - frame * 5 : a[i].d == 2 ? frame * 5 : 0) + "px");
 		}
-	};
+	}
 
 	DetectCollisions (obj1, obj2) {
 		for (let i in obj1){
@@ -320,29 +332,24 @@ class CCRGame {
 				this.gamedata.collisionEvents[class1][class2](obj1, obj2);
 			}
 		}
-	};
+	}
 
 	CheckCollidibleWalls (x, y, d) {
-
 		// Checks for walls directly in front of us.
 		// Given 2,2,0 it will check 2,2,0 and 2,1,2 for example.
-
 		if (this.gamedata.collisions.walls['x' + x + 'y' + y + 'd' + d]) {
 			return true;
 		}
-
 		const nextX = x + (d == 1 ? 1 : d == 3 ? -1 : 0);
 		const nextY = y + (d == 0 ? -1 : d == 2 ? 1 : 0);
 		const nextD = this.directions.opp[d];
-
 		if (this.gamedata.collisions.walls['x' + nextX + 'y' + nextY + 'd' + nextD]) {
 			return true;
 		}
-
+		return false;
 	}
 
 	UpdateDirection (x, y, d) {
-
 		// Check if there is a wall directly in front of us (check the current grid square, and the grid square ahead of us)
 		if (this.CheckCollidibleWalls(x, y, d)){
 			const checkd = this.directions.check[d];
@@ -360,11 +367,9 @@ class CCRGame {
 			return this.directions.hits[d][hits];
 		}
 		return d;
-
 	}
 
 	Move (a, friendlyName) {
-
 		// Move gamedata, but don't animate them.
 
 		this.gamedata.collisions[friendlyName] = {};
@@ -384,33 +389,44 @@ class CCRGame {
 			//console.log('Collision data: ', JSON.stringify(this.gamedata.collisions));
 
 		}
+	}
 
-	};
+	ResetItems (a) {
+		// Reset game items to their original position if they have one
+		for (let i in a) {
+			if (!a[i].hasOwnProperty('original') || typeof(a[i].original) !== 'object' || !a[i].hasOwnProperty('obj')) { continue; }
+			this.PositionItem(a[i].obj, a[i].original);
+			for (let j in a[i].original) {
+				if (!a[i].original.hasOwnProperty(j)) { continue; }
+				a[i][j] = a[i].original[j];
+			}
+		}
+	}
 
 	Play () {
 		this.frame.master++;
 
 		// Animate mice
-		if(this.frame.master % 2 == 0){
+		if(this.frame.master % (this.settings.miceMoveInterval / 10) == 0){
 			this.frame.mice++;
-			this.Animate(this.gamedata.active.mice, this.frame.mice);
+			this.Animate(this.gamedata.items.mice, this.frame.mice);
 		}
 		// Animate cats
-		if(this.frame.master % 3 == 0){
+		if(this.frame.master % (this.settings.catsMoveInterval / 10) == 0){
 			this.frame.cats++;
-			this.Animate(this.gamedata.active.cats, this.frame.cats);
+			this.Animate(this.gamedata.items.cats, this.frame.cats);
 		}
 
 		// Move mice
-		if(this.frame.master % 20 == 0){
-			this.Move(this.gamedata.active.mice, 'mice');
+		if(this.frame.master % this.settings.miceMoveInterval == 0){
+			this.Move(this.gamedata.items.mice, 'mice');
 			this.DetectCollisions(this.gamedata.collisions.mice, this.gamedata.collisions.cats);
 			this.DetectCollisions(this.gamedata.collisions.mice, this.gamedata.collisions.holes);
 			this.DetectCollisions(this.gamedata.collisions.mice, this.gamedata.collisions.goals);
 		}
 		// Move cats
-		if(this.frame.master % 30 == 0){
-			this.Move(this.gamedata.active.cats, 'cats');
+		if(this.frame.master % this.settings.catsMoveInterval == 0){
+			this.Move(this.gamedata.items.cats, 'cats');
 			this.DetectCollisions(this.gamedata.collisions.cats, this.gamedata.collisions.mice);
 			this.DetectCollisions(this.gamedata.collisions.cats, this.gamedata.collisions.holes);
 			this.DetectCollisions(this.gamedata.collisions.cats, this.gamedata.collisions.goals);
@@ -421,17 +437,14 @@ class CCRGame {
 				this.Play();
 			}
 		}, this.animationDelay);
-	};
+	}
 
 	Pause () {
 		this.state = 'paused';
-	};
-
-	ProcessCollision (a, friendlyName, type) {
-
-	};
+	}
 
 	Start () {
+		console.log(this.gamedata);
 		if (this.state == 'stopped' || this.state == 'paused') {
 			this.animationDelay = 16;
 			this.Play();
@@ -440,7 +453,7 @@ class CCRGame {
 			this.Dash();
 		}
 		this.state = 'started';
-	};
+	}
 
 	Dash () {
 		this.animationDelay = 6;
@@ -452,11 +465,14 @@ class CCRGame {
 		}
 
 		this.state = 'stopped';
-	};
+	}
 
 	Reset () {
-		this.Init(this.initData);
-		this.InitDOM();
+		this.ResetItems(this.gamedata.items.mice);
+		this.ResetItems(this.gamedata.items.cats);
+		this.frame.master = 0;
+		this.frame.cats = 0;
+		this.frame.mice = 0;
 	}
 
 };
