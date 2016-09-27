@@ -38,11 +38,17 @@ class CCRGame {
 	AppendToTarget (target) {
 		$(target).html('');
 		$(target).append(this.gamedata.dom);
-	};
+	}
+
+	AddCollisionEvent (obj1, obj2, event) {
+		this.gamedata.collisionEvents[obj1] = this.gamedata.collisionEvents[obj1] || {};
+		this.gamedata.collisionEvents[obj1][obj2] = event || function() { console.log(`No collision event provided for ${obj1} -> ${obj2}`); };
+	}
 
 	AddGameSetting (name, value) {
+		if (typeof(name) !== 'string') { return false; }
 		this.settings[name] = value;
-	};
+	}
 
 	Init (gamedata) {
 		if (!gamedata) { return false; }
@@ -57,21 +63,6 @@ class CCRGame {
 				placed[i] = typeof(gamedata.arrows.placed[i]) !== 'undefined' ? gamedata.arrows.placed[i] : [];
 			}
 			return { available, placed };
-		};
-
-		const createCollisionEvents = () => {
-			return {
-				cat: {
-					hole: (a) => { console.log('Laugh at silly cat'); },
-					goal: (a) => { console.log('You is fail'); },
-					mouse: (a) => { console.log('The cat ate the mouse'); }
-				},
-				mouse: {
-					cat: (a) => { console.log('The mouse went in to the cat'); },
-					hole: (a) => { console.log('Poor little mouse'); },
-					goal: (a) => { console.log('You are win'); }
-				}
-			};
 		};
 
 		const createGrid = () => {
@@ -99,10 +90,18 @@ class CCRGame {
 			arrows: createArrows(),
 			collisions: {},
 			dom: null,
-			collisionEvents: createCollisionEvents(),
+			collisionEvents: {},
 			grid: createGrid(),
 			items: createItems(),
 		};
+
+		// Set up some default collision events
+		this.AddCollisionEvent('cat', 'hole', () => { console.log('Laugh at silly cat!'); });
+		this.AddCollisionEvent('cat', 'goal', () => { console.log('You is fail'); });
+		this.AddCollisionEvent('cat', 'mouse', () => { console.log('The cat ate the mouse'); });
+		this.AddCollisionEvent('mouse', 'cat', () => { console.log('The mouse went in to the cat'); });
+		this.AddCollisionEvent('mouse', 'hole', () => { console.log('Poor little mouse'); });
+		this.AddCollisionEvent('mouse', 'hole', () => { console.log('You are win'); });
 
 		this.frame = {
 			master: 0,
@@ -111,7 +110,7 @@ class CCRGame {
 		};
 
 		this.state = 'stopped';
-	};
+	}
 
 	InitDOM() {
 		// Create wrapper
