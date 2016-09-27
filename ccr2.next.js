@@ -97,11 +97,11 @@ class CCRGame {
 
 		// Set up some default collision events
 		this.AddCollisionEvent('cat', 'hole', () => { console.log('Laugh at silly cat!'); });
-		this.AddCollisionEvent('cat', 'goal', () => { console.log('You is fail'); });
-		this.AddCollisionEvent('cat', 'mouse', () => { console.log('The cat ate the mouse'); });
-		this.AddCollisionEvent('mouse', 'cat', () => { console.log('The mouse went in to the cat'); });
-		this.AddCollisionEvent('mouse', 'hole', () => { console.log('Poor little mouse'); });
-		this.AddCollisionEvent('mouse', 'hole', () => { console.log('You are win'); });
+		this.AddCollisionEvent('cat', 'goal', () => { console.log('You is fail'); this.Stop(); setTimeout(() => { this.Start(); }, 500); });
+		this.AddCollisionEvent('cat', 'mouse', () => { console.log('The cat ate the mouse'); this.Stop(); setTimeout(() => { this.Start(); }, 500); });
+		this.AddCollisionEvent('mouse', 'cat', () => { console.log('The mouse went in to the cat'); this.Stop(); setTimeout(() => { this.Start(); }, 500); });
+		this.AddCollisionEvent('mouse', 'hole', () => { console.log('Poor little mouse'); this.Stop(); setTimeout(() => { this.Start(); }, 500); });
+		this.AddCollisionEvent('mouse', 'goal', () => { console.log('You are win'); });
 
 		this.frame = {
 			master: 0,
