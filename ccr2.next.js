@@ -7,7 +7,7 @@ class CCRGame {
 		this.directions = {
 			// 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None
 
-			// When processing wall collisions, check walls in these directions
+			// When processing wall collisions, check wall in these directions
 			// { current_direction: [ direction_1, direction_2, direction_3 ] }
 			check: {0: [0, 1, 3], 1: [1, 2, 0], 2: [2, 3, 1], 3: [3, 0, 2]},
 
@@ -31,8 +31,8 @@ class CCRGame {
 		this.settings = {};
 		this.AddGameSetting('wallThickness', 5);
 		this.AddGameSetting('animationDelay', 16);
-		this.AddGameSetting('catsMoveInterval', 30);
-		this.AddGameSetting('miceMoveInterval', 20);
+		this.AddGameSetting('catMoveInterval', 30);
+		this.AddGameSetting('mouseMoveInterval', 20);
 	}
 
 	AppendToTarget (target) {
@@ -75,11 +75,11 @@ class CCRGame {
 
 		const createItems = () => {
 			return {
-				cats: [],
-				goals: [],
-				holes: [],
-				mice: [],
-				walls: []
+				cat: [],
+				goal: [],
+				hole: [],
+				mouse: [],
+				wall: []
 			};
 		};
 
@@ -97,16 +97,16 @@ class CCRGame {
 
 		// Set up some default collision events
 		this.AddCollisionEvent('cat', 'hole', () => { console.log('Laugh at silly cat!'); });
-		this.AddCollisionEvent('cat', 'goal', () => { console.log('You is fail'); this.Stop(); setTimeout(() => { this.Start(); }, 500); });
-		this.AddCollisionEvent('cat', 'mouse', () => { console.log('The cat ate the mouse'); this.Stop(); setTimeout(() => { this.Start(); }, 500); });
-		this.AddCollisionEvent('mouse', 'cat', () => { console.log('The mouse went in to the cat'); this.Stop(); setTimeout(() => { this.Start(); }, 500); });
-		this.AddCollisionEvent('mouse', 'hole', () => { console.log('Poor little mouse'); this.Stop(); setTimeout(() => { this.Start(); }, 500); });
+		this.AddCollisionEvent('cat', 'goal', () => { console.log('You is fail'); this.Stop(true); setTimeout(() => { this.Start(); }, 500); });
+		this.AddCollisionEvent('cat', 'mouse', () => { console.log('The cat ate the mouse'); this.Stop(true); setTimeout(() => { this.Start(); }, 500); });
+		this.AddCollisionEvent('mouse', 'cat', () => { console.log('The mouse went in to the cat'); this.Stop(true); setTimeout(() => { this.Start(); }, 500); });
+		this.AddCollisionEvent('mouse', 'hole', () => { console.log('Poor little mouse'); this.Stop(true); setTimeout(() => { this.Start(); }, 500); });
 		this.AddCollisionEvent('mouse', 'goal', () => { console.log('You are win'); });
 
 		this.frame = {
 			master: 0,
-			cats: 0,
-			mice: 0
+			cat: 0,
+			mouse: 0
 		};
 
 		this.state = 'stopped';
@@ -138,26 +138,26 @@ class CCRGame {
 		for (let i = 0; i < this.gamedata.grid.x; i ++){
 			for (let j = 0; j < this.gamedata.grid.y; j ++){
 				if(!this.gamedata.grid.data["x" + i + "y" + (j-1)]){ // No grid square above
-					this.AddItem("walls", {x: i, y: j, d: 0, t: 1}, _wall_wrapper);
+					this.AddItem("wall", {x: i, y: j, d: 0, t: 1}, _wall_wrapper);
 				}
 				if(!this.gamedata.grid.data["x" + i + "y" + (j+1)]){ // No grid square below
-					this.AddItem("walls", {x: i, y: j, d: 2, t: 1}, _wall_wrapper);
+					this.AddItem("wall", {x: i, y: j, d: 2, t: 1}, _wall_wrapper);
 				}
 				if(!this.gamedata.grid.data["x" + (i+1) + "y" + (j)]){ // No grid square to right
-					this.AddItem("walls", {x: i, y: j, d: 1, t: 1}, _wall_wrapper);
+					this.AddItem("wall", {x: i, y: j, d: 1, t: 1}, _wall_wrapper);
 				}
 				if(!this.gamedata.grid.data["x" + (i-1) + "y" + (j)]){ // No grid square to left
-					this.AddItem("walls", {x: i, y: j, d: 3, t: 1}, _wall_wrapper);
+					this.AddItem("wall", {x: i, y: j, d: 3, t: 1}, _wall_wrapper);
 				}
 			}
 		}
 
 		const items = [
-			{ container: _grid_wrapper, type: 'cats' },
-			{ container: _grid_wrapper, type: 'goals' },
-			{ container: _grid_wrapper, type: 'holes' },
-			{ container: _grid_wrapper, type: 'mice' },
-			{ container: _wall_wrapper, type: 'walls' }
+			{ container: _grid_wrapper, type: 'cat' },
+			{ container: _grid_wrapper, type: 'goal' },
+			{ container: _grid_wrapper, type: 'hole' },
+			{ container: _grid_wrapper, type: 'mouse' },
+			{ container: _wall_wrapper, type: 'wall' }
 		];
 
 		for (let i in items) {
@@ -208,6 +208,7 @@ class CCRGame {
 			}
 		}
 		// Add the object to the gamedata items
+		console.log('type', type);
 		this.gamedata.items[type].push(obj);
 		// Add the object to the collisions object using its coordinates as the key (fast lookup)
 		this.gamedata.collisions[type][`x${obj.x}y${obj.y}`] = obj;
@@ -234,31 +235,31 @@ class CCRGame {
 		this.gamedata.collisions[type] = this.gamedata.collisions[type] || {};
 
 		switch (type) {
-			case 'cats':
+			case 'cat':
 				if (target) {
-					_el.prop('class', 'cat')
+					_el.prop('class', `cat sprite dir${data.d} frame0`)
 					.css("width", "50px")
 					.css("height", "50px");
 				}
 				this.AddGameData(type, { x: data.x, y: data.y, d: data.d, obj: _el }, ['x', 'y', 'd']);
 			break;
-			case 'holes':
+			case 'hole':
 				if (target) {
 					_el.prop('class', 'hole')
 					.css("width", "50px")
 					.css("height", "50px");
 				}
 				this.AddGameData(type, {x: data.x, y: data.y, obj: _el});
-				//this.gamedata.collisions.holes['x' + data.x + 'y' + data.y] = 1;
+				//this.gamedata.collisions.hole['x' + data.x + 'y' + data.y] = 1;
 			break;
-			case 'goals':
+			case 'goal':
 				if (target) {
 					_el.prop('class', 'goal')
 					.css("width", "50px")
 					.css("height", "50px");
 				}
 				this.AddGameData(type, {x: data.x, y: data.y, obj: _el});
-				//this.gamedata.collisions.goals['x' + data.x + 'y' + data.y] = 1;
+				//this.gamedata.collisions.goal['x' + data.x + 'y' + data.y] = 1;
 			break;
 			case 'grid':
 				if (target) {
@@ -270,15 +271,15 @@ class CCRGame {
 				}
 				this.gamedata.grid.data["x" + data.x + "y" + data.y] = 1;
 			break;
-			case 'mice':
+			case 'mouse':
 				if (target) {
-					_el.prop('class', 'mouse')
+					_el.prop('class', `mouse sprite dir${data.d} frame0`)
 					.css("width", "50px")
 					.css("height", "50px");
 				}
 				this.AddGameData(type, {x: data.x, y: data.y, d: data.d, obj: _el }, ['x', 'y', 'd']);
 			break;
-			case 'walls':
+			case 'wall':
 				if (target) {
 					_el.prop('class', 'wall')
 					.css("margin-left", (data.d == 1 ? data.x * 50 + (50 - this.settings.wallThickness / 2) : data.d == 3 ? data.x * 50 - this.settings.wallThickness / 2 : data.x * 50) + "px")
@@ -288,7 +289,7 @@ class CCRGame {
 					.prop('title', `x${data.x} y${data.y} d${data.d}`);
 				}
 				data.t = data.t || 1;
-				this.gamedata.collisions.walls["x" + data.x + "y" + data.y + "d" + data.d] = data.t;
+				this.gamedata.collisions.wall["x" + data.x + "y" + data.y + "d" + data.d] = data.t;
 			break;
 		}
 
@@ -299,50 +300,52 @@ class CCRGame {
 
 	Animate (a, frame) {
 		// Update the DOM with new gamedata movements and smooth things out
-		frame = frame % 10;
-		if (frame == 0){ frame = 10; }
+		let useFrame = frame % 10;
+		if (useFrame == 0) { useFrame = 10; }
 		let i = 0;
 		let al = a.length;
 		for (i = 0; i < al; i++){
 			if (!a[i] || !a[i].obj || !a[i].obj.css) { continue; }
 			// TODO: Make this use PositionItem somehow to reuse that code
 			a[i].obj
-			.css("margin-left", a[i].x * 50 + (a[i].d == 1 ? frame * 5 : a[i].d == 3 ? - frame * 5 : 0) + "px")
-			.css("margin-top", a[i].y * 50 + (a[i].d == 0 ? - frame * 5 : a[i].d == 2 ? frame * 5 : 0) + "px");
+			.css("margin-left", a[i].x * 50 + (a[i].d == 1 ? useFrame * 5 : a[i].d == 3 ? - useFrame * 5 : 0) + "px")
+			.css("margin-top", a[i].y * 50 + (a[i].d == 0 ? - useFrame * 5 : a[i].d == 2 ? useFrame * 5 : 0) + "px")
+			.removeClass((i, css) => {
+				if (!/frame[0-9]/.test(css)) { return; }
+				return css.match(/frame[0-9]/)[0];
+			})
+			.removeClass((i, css) => {
+				if (!/dir[0-9]/.test(css)) { return; }
+				return css.match(/dir[0-9]/)[0];
+			})
+			.addClass(`dir${a[i].d} frame${frame % 10}`);
 		}
 	}
 
-	DetectCollisions (obj1, obj2) {
+	DetectCollisions (type1, type2) {
+		let obj1 = this.gamedata.collisions[type1];
+		let obj2 = this.gamedata.collisions[type2];
 		for (let i in obj1){
 			if (obj2.hasOwnProperty(i)){
 				//console.log(obj1[i], obj2[i]);
 				//console.log(`Collision occurred at: ${obj1[i].x}x${obj1[i].y}, between ${obj1[i].obj[0].className} and ${obj2[i].obj[0].className}`);
-				const class1 = obj1[i].obj[0].className;
-				const class2 = obj2[i].obj[0].className;
-				console.log(`Collision detected: ${class1} -> ${class2}`);
-				if (!this.gamedata.collisionEvents.hasOwnProperty(class1)) {
-					console.log(`No collision event for ${class1}`);
-					continue;
-				}
-				if (!this.gamedata.collisionEvents[class1].hasOwnProperty(class2)) {
-					console.log(`No collision event for ${class1}.${class2}`);
-					continue;
-				}
-				this.gamedata.collisionEvents[class1][class2](obj1, obj2);
+				console.log(`Collision detected: ${type1} -> ${type2}`);
+				if (!this.gamedata.collisionEvents[type1][type2]) { continue; }
+				this.gamedata.collisionEvents[type1][type2](obj1, obj2);
 			}
 		}
 	}
 
 	CheckCollidibleWalls (x, y, d) {
-		// Checks for walls directly in front of us.
+		// Checks for wall directly in front of us.
 		// Given 2,2,0 it will check 2,2,0 and 2,1,2 for example.
-		if (this.gamedata.collisions.walls['x' + x + 'y' + y + 'd' + d]) {
+		if (this.gamedata.collisions.wall['x' + x + 'y' + y + 'd' + d]) {
 			return true;
 		}
 		const nextX = x + (d == 1 ? 1 : d == 3 ? -1 : 0);
 		const nextY = y + (d == 0 ? -1 : d == 2 ? 1 : 0);
 		const nextD = this.directions.opp[d];
-		if (this.gamedata.collisions.walls['x' + nextX + 'y' + nextY + 'd' + nextD]) {
+		if (this.gamedata.collisions.wall['x' + nextX + 'y' + nextY + 'd' + nextD]) {
 			return true;
 		}
 		return false;
@@ -355,23 +358,23 @@ class CCRGame {
 			const checkdl = checkd.length;
 			let hits = 0;
 			let i = 0;
-			// Find out how many walls we will hit
+			// Find out how many wall we will hit
 			for (i = 0; i < checkdl; i++) {
 				if (this.CheckCollidibleWalls(x, y, checkd[i])) {
 					hits++;
 				}
 				else { break; }
 			}
-			// Return the new direction based on the number of walls we hit
+			// Return the new direction based on the number of wall we hit
 			return this.directions.hits[d][hits];
 		}
 		return d;
 	}
 
-	Move (a, friendlyName) {
+	Move (a, type) {
 		// Move gamedata, but don't animate them.
 
-		this.gamedata.collisions[friendlyName] = {};
+		this.gamedata.collisions[type] = {};
 
 		for (let i = 0, al = a.length; i < al; i++){
 
@@ -383,7 +386,7 @@ class CCRGame {
 			a[i].d = this.UpdateDirection(a[i].x, a[i].y, a[i].d);
 
 			// Update collisions
-			this.gamedata.collisions[friendlyName]["x" + a[i].x + "y" + a[i].y] = a[i];
+			this.gamedata.collisions[type]["x" + a[i].x + "y" + a[i].y] = a[i];
 
 			//console.log('Collision data: ', JSON.stringify(this.gamedata.collisions));
 
@@ -400,35 +403,36 @@ class CCRGame {
 				a[i][j] = a[i].original[j];
 			}
 		}
+		this.Animate(a);
 	}
 
 	Play () {
 		this.frame.master++;
 
-		// Animate mice
-		if(this.frame.master % (this.settings.miceMoveInterval / 10) == 0){
-			this.frame.mice++;
-			this.Animate(this.gamedata.items.mice, this.frame.mice);
+		// Animate mouse
+		if(this.frame.master % (this.settings.mouseMoveInterval / 10) == 0){
+			this.frame.mouse++;
+			this.Animate(this.gamedata.items.mouse, this.frame.mouse);
 		}
-		// Animate cats
-		if(this.frame.master % (this.settings.catsMoveInterval / 10) == 0){
-			this.frame.cats++;
-			this.Animate(this.gamedata.items.cats, this.frame.cats);
+		// Animate cat
+		if(this.frame.master % (this.settings.catMoveInterval / 10) == 0){
+			this.frame.cat++;
+			this.Animate(this.gamedata.items.cat, this.frame.cat);
 		}
 
-		// Move mice
-		if(this.frame.master % this.settings.miceMoveInterval == 0){
-			this.Move(this.gamedata.items.mice, 'mice');
-			this.DetectCollisions(this.gamedata.collisions.mice, this.gamedata.collisions.cats);
-			this.DetectCollisions(this.gamedata.collisions.mice, this.gamedata.collisions.holes);
-			this.DetectCollisions(this.gamedata.collisions.mice, this.gamedata.collisions.goals);
+		// Move mouse
+		if(this.frame.master % this.settings.mouseMoveInterval == 0){
+			this.Move(this.gamedata.items.mouse, 'mouse');
+			this.DetectCollisions('mouse', 'cat');
+			this.DetectCollisions('mouse', 'hole');
+			this.DetectCollisions('mouse', 'goal');
 		}
-		// Move cats
-		if(this.frame.master % this.settings.catsMoveInterval == 0){
-			this.Move(this.gamedata.items.cats, 'cats');
-			this.DetectCollisions(this.gamedata.collisions.cats, this.gamedata.collisions.mice);
-			this.DetectCollisions(this.gamedata.collisions.cats, this.gamedata.collisions.holes);
-			this.DetectCollisions(this.gamedata.collisions.cats, this.gamedata.collisions.goals);
+		// Move cat
+		if(this.frame.master % this.settings.catMoveInterval == 0){
+			this.Move(this.gamedata.items.cat, 'cat');
+			this.DetectCollisions('cat', 'mouse');
+			this.DetectCollisions('cat', 'hole');
+			this.DetectCollisions('cat', 'goal');
 		}
 
 		setTimeout( () => {
@@ -458,8 +462,8 @@ class CCRGame {
 		this.animationDelay = 6;
 	}
 
-	Stop (status) {
-		if (this.state == 'stopped') {
+	Stop (preventReset = false) {
+		if (this.state == 'stopped' && !preventReset) {
 			this.Reset();
 		}
 
@@ -467,11 +471,11 @@ class CCRGame {
 	}
 
 	Reset () {
-		this.ResetItems(this.gamedata.items.mice);
-		this.ResetItems(this.gamedata.items.cats);
+		this.ResetItems(this.gamedata.items.mouse);
+		this.ResetItems(this.gamedata.items.cat);
 		this.frame.master = 0;
-		this.frame.cats = 0;
-		this.frame.mice = 0;
+		this.frame.cat = 0;
+		this.frame.mouse = 0;
 	}
 
 };
@@ -491,23 +495,23 @@ if (Meteor.isClient) {
 			arrows: {
 				available: {0: 2, 1: 3, 2: 1, 3: 1}
 			},
-			cats: [
+			cat: [
 				{x: 1, y: 1, d: 1}
 			],
-			goals: [
+			goal: [
 				{x: 10, y: 1}
 			],
 			grid: {x: 12, y: 9},
-			holes: [
+			hole: [
 				{x: 1, y: 2}
 			],
-			mice: [
+			mouse: [
 				{x: 0, y: 0, d: 1},
 				{x: 1, y: 0, d: 1},
 				{x: 2, y: 0, d: 1},
 				{x: 11, y: 3, d: 3}
 			],
-			walls: [
+			wall: [
 				{x: 0, y: 0, d: 2},
 				{x: 2, y: 1, d: 1},
 				{x: 2, y: 4, d: 2},
@@ -535,7 +539,7 @@ if (Meteor.isClient) {
 	});
 
 	Template.playback.events({
-		'click input[name=play]': () => {
+		'click input[name=play]': (e) => {
 			test.Start();
 		},
 		'click input[name=stop]': () => {

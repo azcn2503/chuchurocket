@@ -46,6 +46,23 @@ input[type=button] {
 
 .ccr_wrapper {
 	display: inline-block;
+	.sprite {
+		background-position: 0 0;
+		&.dir0 { background-position-y: 0; }
+		&.dir1 { background-position-y: -50px; }
+		&.dir2 { background-position-y: -100px; }
+		&.dir3 { background-position-y: -150px; }
+		&.frame0 { background-position-x: 0; }
+		&.frame1 { background-position-x: -50px; }
+		&.frame2 { background-position-x: -100px; }
+		&.frame3 { background-position-x: -150px; }
+		&.frame4 { background-position-x: -200px; }
+		&.frame5 { background-position-x: -250px; }
+		&.frame6 { background-position-x: -300px; }
+		&.frame7 { background-position-x: -350px; }
+		&.frame8 { background-position-x: -400px; }
+		&.frame9 { background-position-x: -450px; }
+	}
 	.arrow {
 		background-image: url('img/arrows.png');
 		height: 50px;
@@ -56,10 +73,8 @@ input[type=button] {
 		&.dir3 { background-position: -150px; }
 	}
 	.cat {
-		border: 5px solid #f80;
-		border-radius: 25px;
+		background-image: url('img/kapukapu-sprite.png');
 		z-index: 3;
-		-webkit-transform: scale(0.75);
 	}
 	.goal {
 		background-color: #f00;
@@ -95,10 +110,8 @@ input[type=button] {
 		-webkit-transform: scale(0.75);
 	}
 	.mouse {
-		border: 5px solid #88f;
-		border-radius: 25px;
+		background-image: url('img/chuchu-sprite.png');
 		z-index: 2;
-		-webkit-transform: scale(0.5);
 	}
 	.toolbar {
 		.arrow {
