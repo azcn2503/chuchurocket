@@ -308,8 +308,8 @@ class CCRGame {
 			if (!a[i] || !a[i].obj || !a[i].obj.css) { continue; }
 			// TODO: Make this use PositionItem somehow to reuse that code
 			a[i].obj
-			.css("margin-left", a[i].x * 50 + (a[i].d == 1 ? useFrame * 5 : a[i].d == 3 ? - useFrame * 5 : 0) + "px")
-			.css("margin-top", a[i].y * 50 + (a[i].d == 0 ? - useFrame * 5 : a[i].d == 2 ? useFrame * 5 : 0) + "px")
+			.css("margin-left", a[i].x * 50 + (a[i].d == 1 ? -50 + (useFrame * 5) : a[i].d == 3 ? 50 - (useFrame * 5) : 0) + "px")
+			.css("margin-top", a[i].y * 50 + (a[i].d == 0 ? 50 - (useFrame * 5) : a[i].d == 2 ? -50 + (useFrame * 5) : 0) + "px")
 			.removeClass((i, css) => {
 				if (!/frame[0-9]/.test(css)) { return; }
 				return css.match(/frame[0-9]/)[0];
@@ -325,6 +325,7 @@ class CCRGame {
 	DetectCollisions (type1, type2) {
 		let obj1 = this.gamedata.collisions[type1];
 		let obj2 = this.gamedata.collisions[type2];
+		if (typeof(obj1) === 'undefined' || typeof(obj2) === 'undefined') { return false; }
 		for (let i in obj1){
 			if (obj2.hasOwnProperty(i)){
 				//console.log(obj1[i], obj2[i]);
@@ -378,12 +379,12 @@ class CCRGame {
 
 		for (let i = 0, al = a.length; i < al; i++){
 
+			// Update direction
+			a[i].d = this.UpdateDirection(a[i].x, a[i].y, a[i].d);
+
 			// Update coordinate
 			a[i].x += (a[i].d == 1 ? 1 : a[i].d == 3 ? -1 : 0);
 			a[i].y += (a[i].d == 0 ? -1 : a[i].d == 2 ? 1 : 0);
-
-			// Update direction
-			a[i].d = this.UpdateDirection(a[i].x, a[i].y, a[i].d);
 
 			// Update collisions
 			this.gamedata.collisions[type]["x" + a[i].x + "y" + a[i].y] = a[i];
@@ -407,7 +408,24 @@ class CCRGame {
 	}
 
 	Play () {
-		this.frame.master++;
+
+		console.log(`frame: ${this.frame.master}`);
+
+		// Move mouse
+		if (this.frame.master % this.settings.mouseMoveInterval == 0){
+			this.Move(this.gamedata.items.mouse, 'mouse');
+			this.DetectCollisions('mouse', 'cat');
+			this.DetectCollisions('mouse', 'hole');
+			this.DetectCollisions('mouse', 'goal');
+		}
+		// Move cat
+		if (this.frame.master % this.settings.catMoveInterval == 0){
+			console.log(`Moving cat`);
+			this.Move(this.gamedata.items.cat, 'cat');
+			//this.DetectCollisions('cat', 'mouse');
+			this.DetectCollisions('cat', 'hole');
+			this.DetectCollisions('cat', 'goal');
+		}
 
 		// Animate mouse
 		if(this.frame.master % (this.settings.mouseMoveInterval / 10) == 0){
@@ -420,26 +438,13 @@ class CCRGame {
 			this.Animate(this.gamedata.items.cat, this.frame.cat);
 		}
 
-		// Move mouse
-		if(this.frame.master % this.settings.mouseMoveInterval == 0){
-			this.Move(this.gamedata.items.mouse, 'mouse');
-			this.DetectCollisions('mouse', 'cat');
-			this.DetectCollisions('mouse', 'hole');
-			this.DetectCollisions('mouse', 'goal');
-		}
-		// Move cat
-		if(this.frame.master % this.settings.catMoveInterval == 0){
-			this.Move(this.gamedata.items.cat, 'cat');
-			this.DetectCollisions('cat', 'mouse');
-			this.DetectCollisions('cat', 'hole');
-			this.DetectCollisions('cat', 'goal');
-		}
+		this.frame.master++;
 
 		setTimeout( () => {
 			if (this.state == 'started') {
 				this.Play();
 			}
-		}, this.animationDelay);
+		}, this.settings.animationDelay);
 	}
 
 	Pause () {
@@ -449,7 +454,7 @@ class CCRGame {
 	Start () {
 		console.log(this.gamedata);
 		if (this.state == 'stopped' || this.state == 'paused') {
-			this.animationDelay = 16;
+			this.settings.animationDelay = 16;
 			this.Play();
 		}
 		if (this.state == 'started') {
@@ -459,7 +464,7 @@ class CCRGame {
 	}
 
 	Dash () {
-		this.animationDelay = 6;
+		this.settings.animationDelay = 6;
 	}
 
 	Stop (preventReset = false) {
@@ -489,52 +494,80 @@ if (Meteor.isClient) {
 	}
 
 	let test = new CCRGame();
-	test.Init(
-		{
-			target: '#game',
-			arrows: {
-				available: {0: 2, 1: 3, 2: 1, 3: 1}
-			},
-			cat: [
-				{x: 1, y: 1, d: 1}
-			],
-			goal: [
-				{x: 10, y: 1}
-			],
-			grid: {x: 12, y: 9},
-			hole: [
-				{x: 1, y: 2}
-			],
-			mouse: [
-				{x: 0, y: 0, d: 1},
-				{x: 1, y: 0, d: 1},
-				{x: 2, y: 0, d: 1},
-				{x: 11, y: 3, d: 3}
-			],
-			wall: [
-				{x: 0, y: 0, d: 2},
-				{x: 2, y: 1, d: 1},
-				{x: 2, y: 4, d: 2},
-				{x: 1, y: 4, d: 3},
-				{x: 11, y: 6, d: 2},
-				{x: 2, y: 6, d: 3},
-				{x: 2, y: 5, d: 1},
-				{x: 2, y: 5, d: 3},
-				{x: 5, y: 0, d: 1},
-				{x: 4, y: 8, d: 3},
-				{x: 4, y: 2, d: 0},
-				{x: 2, y: 7, d: 2},
-				{x: 8, y: 2, d: 1},
-				{x: 8, y: 7, d: 2},
-				{x: 6, y: 7, d: 3},
-				{x: 6, y: 4, d: 0}
-			]
-		}
-	);
+	test.Init( {
+		target: '#game',
+		arrows: {
+			available: { 0: 1 }
+		},
+		cat: [
+			{ x: 0, y: 1, d: 1 },
+		],
+		mouse: [
+			{ x: 0, y: 0, d: 1 },
+			{ x: 1, y: 0, d: 1 },
+			{ x: 2, y: 0, d: 1 },
+			{ x: 3, y: 0, d: 1 },
+			{ x: 4, y: 0, d: 1 },
+			{ x: 5, y: 0, d: 1 },
+			{ x: 6, y: 0, d: 1 },
+			{ x: 7, y: 0, d: 1 },
+			{ x: 8, y: 0, d: 1 },
+			{ x: 9, y: 0, d: 1 },
+			{ x: 10, y: 0, d: 1 },
+			{ x: 11, y: 0, d: 1 },
+			{ x: 1, y: 1, d: 1 },
+			{ x: 2, y: 1, d: 1 },
+			{ x: 3, y: 1, d: 1 },
+			{ x: 4, y: 1, d: 1 },
+			{ x: 5, y: 1, d: 1 },
+			{ x: 6, y: 1, d: 1 },
+			{ x: 7, y: 1, d: 1 },
+			{ x: 8, y: 1, d: 1 },
+			{ x: 9, y: 1, d: 1 },
+			{ x: 10, y: 1, d: 1 },
+			{ x: 0, y: 2, d: 1 },
+			{ x: 1, y: 2, d: 1 },
+			{ x: 2, y: 2, d: 1 },
+			{ x: 3, y: 2, d: 1 },
+			{ x: 4, y: 2, d: 1 },
+			{ x: 5, y: 2, d: 1 },
+			{ x: 6, y: 2, d: 1 },
+			{ x: 7, y: 2, d: 1 },
+			{ x: 8, y: 2, d: 1 },
+			{ x: 9, y: 2, d: 1 },
+		],
+		wall: [
+			{ x: 1, y: 1, d: 2 },
+			{ x: 11, y: 1, d: 1 },
+			{ x: 2, y: 2, d: 2 },
+			{ x: 9, y: 2, d: 1 },
+			{ x: 4, y: 3, d: 2 },
+			{ x: 5, y: 3, d: 2 },
+			{ x: 6, y: 3, d: 2 },
+			{ x: 5, y: 4, d: 2 },
+			{ x: 6, y: 4, d: 2 },
+			{ x: 7, y: 4, d: 2 },
+			{ x: 2, y: 5, d: 1 },
+			{ x: 8, y: 5, d: 2 },
+			{ x: 1, y: 6, d: 1 },
+			{ x: 9, y: 6, d: 2 },
+			{ x: 0, y: 7, d: 1 },
+			{ x: 10, y: 7, d: 2 },
+		],
+		goal: [
+			{ x: 4, y: 4 },
+			{ x: 5, y: 4 },
+			{ x: 6, y: 4 },
+			{ x: 7, y: 4 }
+		]
+	});
 
 	Template.playback.helpers({
 		'gameIsReady': () => {
 			return Session.get('gameIsReady');
+		},
+		'gameState': () => {
+			return test.state;
 		}
 	});
 
