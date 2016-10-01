@@ -5,34 +5,33 @@ class CCRGame {
 		this.initData = {};
 
 		this.directions = {
-			// 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None
-
-			// When processing wall collisions, check wall in these directions
-			// { current_direction: [ direction_1, direction_2, direction_3 ] }
-			check: {0: [0, 1, 3], 1: [1, 2, 0], 2: [2, 3, 1], 3: [3, 0, 2]},
-
-			// Calculate the new direction based on number of wall collisions
-			// { current_direction: { number_of_hits: new_direction }
-			hits: {0: {1: 1, 2: 3, 3: 2, 4: -1}, 1: {1: 2, 2: 0, 3: 3, 4: -1}, 2: {1: 3, 2: 1, 3: 0, 4: -1}, 3: {1: 0, 2: 2, 3: 1, 4: -1}},
-
+			// Directions are: 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None (stationary)
 			// Next directions
-			// { current_direction: next_direction }
+			//  { current_direction: next_direction }
 			next: {0: 1, 1: 2, 2: 3, 3: 0},
-
 			// Opposite directions
-			// { current_direction: opposite_direction }
+			//  { current_direction: opposite_direction }
 			opp: {0: 2, 1: 3, 2: 0, 3: 1},
-
 			// Previous directions
-			// { current_direction: previous_direction }
+			//  { current_direction: previous_direction }
 			prev: {0: 3, 1: 0, 2: 1, 3: 2}
 		};
+
+		// Generate check and hits directions
+		this.directions.check = {};
+		this.directions.hits = {};
+		for (let i = 0; i < 4; i += 1) {
+            this.directions.check[i] = [ i, this.directions.next[i], this.directions.prev[i], this.directions.opp[i] ];
+            this.directions.hits[i] = { 1: this.directions.next[i], 2: this.directions.prev[i], 3: this.directions.opp[i], 4: -1 };
+        }
 
 		this.settings = {};
 		this.AddGameSetting('wallThickness', 5);
 		this.AddGameSetting('animationDelay', 16);
 		this.AddGameSetting('catMoveInterval', 30);
+		this.AddGameSetting('catAnimationFrames', 8);
 		this.AddGameSetting('mouseMoveInterval', 20);
+		this.AddGameSetting('mouseAnimationFrames', 12);
 	}
 
 	AppendToTarget (target) {
@@ -109,7 +108,7 @@ class CCRGame {
 			mouse: 0
 		};
 
-		this.state = 'stopped';
+		this.SetState('stopped');
 	}
 
 	InitDOM() {
@@ -214,9 +213,9 @@ class CCRGame {
 		this.gamedata.collisions[type][`x${obj.x}y${obj.y}`] = obj;
 	}
 
-	PositionItem (el, data) {
+	PositionItem (el, data, xMod = 0, yMod = 0) {
 		// Position an item according to its x, y and d properties
-		el.css('margin-left', `${data.x * 50}px`).css('margin-top', `${data.y * 50}px`);
+		el.css('margin-left', `${(data.x * 50) + xMod}px`).css('margin-top', `${(data.y * 50) + yMod}px`);
 		return true;
 	}
 
@@ -298,27 +297,25 @@ class CCRGame {
 		}
 	}
 
-	Animate (a, frame) {
+	Animate (a, frame, spriteFrame = 0) {
 		// Update the DOM with new gamedata movements and smooth things out
 		let useFrame = frame % 10;
-		if (useFrame == 0) { useFrame = 10; }
 		let i = 0;
 		let al = a.length;
 		for (i = 0; i < al; i++){
 			if (!a[i] || !a[i].obj || !a[i].obj.css) { continue; }
-			// TODO: Make this use PositionItem somehow to reuse that code
-			a[i].obj
-			.css("margin-left", a[i].x * 50 + (a[i].d == 1 ? -50 + (useFrame * 5) : a[i].d == 3 ? 50 - (useFrame * 5) : 0) + "px")
-			.css("margin-top", a[i].y * 50 + (a[i].d == 0 ? 50 - (useFrame * 5) : a[i].d == 2 ? -50 + (useFrame * 5) : 0) + "px")
-			.removeClass((i, css) => {
-				if (!/frame[0-9]/.test(css)) { return; }
-				return css.match(/frame[0-9]/)[0];
+			const xMod = a[i].d == 1 ? -50 + (useFrame * 5) : a[i].d == 3 ? 50 - (useFrame * 5) : 0;
+			const yMod = a[i].d == 0 ? 50 - (useFrame * 5) : a[i].d == 2 ? -50 + (useFrame * 5) : 0;
+			this.PositionItem(a[i].obj, a[i], xMod, yMod);
+			a[i].obj.removeClass((i, css) => {
+				if (!/frame[0-9]+/.test(css)) { return; }
+				return css.match(/frame[0-9]+/)[0];
 			})
 			.removeClass((i, css) => {
 				if (!/dir[0-9]/.test(css)) { return; }
-				return css.match(/dir[0-9]/)[0];
+				return css.match(/dir[0-9]+/)[0];
 			})
-			.addClass(`dir${a[i].d} frame${frame % 10}`);
+			.addClass(`dir${a[i].d} frame${spriteFrame}`);
 		}
 	}
 
@@ -409,7 +406,7 @@ class CCRGame {
 
 	Play () {
 
-		console.log(`frame: ${this.frame.master}`);
+		//console.log(`frame: ${this.frame.master}`);
 
 		// Move mouse
 		if (this.frame.master % this.settings.mouseMoveInterval == 0){
@@ -429,26 +426,26 @@ class CCRGame {
 
 		// Animate mouse
 		if(this.frame.master % (this.settings.mouseMoveInterval / 10) == 0){
+			this.Animate(this.gamedata.items.mouse, this.frame.mouse, this.frame.mouse % this.settings.mouseAnimationFrames);
 			this.frame.mouse++;
-			this.Animate(this.gamedata.items.mouse, this.frame.mouse);
 		}
 		// Animate cat
 		if(this.frame.master % (this.settings.catMoveInterval / 10) == 0){
+			this.Animate(this.gamedata.items.cat, this.frame.cat, this.frame.cat % this.settings.catAnimationFrames);
 			this.frame.cat++;
-			this.Animate(this.gamedata.items.cat, this.frame.cat);
 		}
 
 		this.frame.master++;
 
-		setTimeout( () => {
+		requestAnimationFrame( () => {
 			if (this.state == 'started') {
 				this.Play();
 			}
-		}, this.settings.animationDelay);
+		});
 	}
 
 	Pause () {
-		this.state = 'paused';
+		this.SetState('paused');
 	}
 
 	Start () {
@@ -460,7 +457,7 @@ class CCRGame {
 		if (this.state == 'started') {
 			this.Dash();
 		}
-		this.state = 'started';
+		this.SetState('started');
 	}
 
 	Dash () {
@@ -472,7 +469,7 @@ class CCRGame {
 			this.Reset();
 		}
 
-		this.state = 'stopped';
+		this.SetState('stopped');
 	}
 
 	Reset () {
@@ -481,6 +478,13 @@ class CCRGame {
 		this.frame.master = 0;
 		this.frame.cat = 0;
 		this.frame.mouse = 0;
+	}
+
+	SetState (state) {
+
+		this.state = state;
+		Session.set('gameState', state);
+
 	}
 
 };
@@ -566,8 +570,16 @@ if (Meteor.isClient) {
 		'gameIsReady': () => {
 			return Session.get('gameIsReady');
 		},
-		'gameState': () => {
-			return test.state;
+		'playButtonValue': () => {
+			let state = Session.get('gameState');
+			if (state == 'stopped') { return 'Play'; }
+			// if (state == 'started') { return 'Dash'; }
+			return 'Play';
+		},
+		'stopButtonValue': () => {
+			let state = Session.get('gameState');
+			if (state == 'stopped') { return 'Reset'; }
+			if (state == 'started') { return 'Stop'; }
 		}
 	});
 

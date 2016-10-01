@@ -21,8 +21,8 @@
 <template name='playback'>
 	<div class='playback'>
 		{{#if gameIsReady}}
-			<input type='button' name='play' value='Play' />
-			<input type='button' name='stop' value='Stop' />
+			<input type='button' name='play' value='{{playButtonValue}}' />
+			<input type='button' name='stop' value='{{stopButtonValue}}' />
 		{{/if}}
 	</div>
 </template>
