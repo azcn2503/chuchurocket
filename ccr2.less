@@ -25,6 +25,7 @@ input[type=button] {
 		background-color: darken(#ddd, 20%);
 	}
 }
+
 .playback {
 	position: absolute;
 	bottom: 0;
@@ -37,6 +38,13 @@ input[type=button] {
 #feedback {
 	right: -190px;
 	&:hover { right: 0; }
+}
+
+#game {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
 }
 
 #levels {
@@ -137,19 +145,6 @@ input[type=button] {
 
 .content {
 	padding: 10px;
-}
-
-.dt {
-	display: table;
-	height: 100%;
-	width: 100%;
-}
-.dtc {
-	display: table-cell;
-	height: 100%;
-	text-align: center;
-	vertical-align: middle;
-	width: 100%;
 }
 
 .shadowtext {

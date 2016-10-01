@@ -59,7 +59,6 @@ class CCRGame {
 			if (typeof(gamedata.arrows.placed) === 'undefined') { gamedata.arrows.placed = {}; }
 			for (let i = 0; i < 4; i += 1) {
 				available[i] = typeof(gamedata.arrows.available[i]) !== 'undefined' ? gamedata.arrows.available[i] : 0;
-				placed[i] = typeof(gamedata.arrows.placed[i]) !== 'undefined' ? gamedata.arrows.placed[i] : [];
 			}
 			return { available, placed };
 		};
@@ -94,12 +93,16 @@ class CCRGame {
 			items: createItems(),
 		};
 
+		const placeholderCollisionEvent = (message) => {
+			console.log(`GAME SHOULD END NOW: ${message}`);
+		};
+
 		// Set up some default collision events
 		this.AddCollisionEvent('cat', 'hole', () => { console.log('Laugh at silly cat!'); });
-		this.AddCollisionEvent('cat', 'goal', () => { console.log('You is fail'); this.Stop(true); setTimeout(() => { this.Start(); }, 500); });
-		this.AddCollisionEvent('cat', 'mouse', () => { console.log('The cat ate the mouse'); this.Stop(true); setTimeout(() => { this.Start(); }, 500); });
-		this.AddCollisionEvent('mouse', 'cat', () => { console.log('The mouse went in to the cat'); this.Stop(true); setTimeout(() => { this.Start(); }, 500); });
-		this.AddCollisionEvent('mouse', 'hole', () => { console.log('Poor little mouse'); this.Stop(true); setTimeout(() => { this.Start(); }, 500); });
+		this.AddCollisionEvent('cat', 'goal', () => { placeholderCollisionEvent('You is fail'); });
+		this.AddCollisionEvent('cat', 'mouse', () => { placeholderCollisionEvent('The cat ate the mouse'); });
+		this.AddCollisionEvent('mouse', 'cat', () => { placeholderCollisionEvent('The mouse went in to the cat'); });
+		this.AddCollisionEvent('mouse', 'hole', () => { placeholderCollisionEvent('Poor little mouse'); });
 		this.AddCollisionEvent('mouse', 'goal', () => { console.log('You are win'); });
 
 		this.frame = {
@@ -207,7 +210,6 @@ class CCRGame {
 			}
 		}
 		// Add the object to the gamedata items
-		console.log('type', type);
 		this.gamedata.items[type].push(obj);
 		// Add the object to the collisions object using its coordinates as the key (fast lookup)
 		this.gamedata.collisions[type][`x${obj.x}y${obj.y}`] = obj;
@@ -266,7 +268,10 @@ class CCRGame {
 					.css("width", "50px")
 					.css("height", "50px")
 					.addClass((data.x + data.y) % 2 == 0 ? "col1" : "col2")
-					.html(`<span>${data.x}x${data.y}</span>`);
+					.html(`<span>${data.x}x${data.y}</span>`)
+					.on('click', null, data, (e) => {
+						this.PlaceArrow(e.data);
+					});
 				}
 				this.gamedata.grid.data["x" + data.x + "y" + data.y] = 1;
 			break;
@@ -295,6 +300,12 @@ class CCRGame {
 		if (target && _el) {
 			target.append(_el);
 		}
+	}
+
+	PlaceArrow (data) {
+
+		this.gamedata.arrows.placed[`x${data.x}y${data.y}`] = 0;
+
 	}
 
 	Animate (a, frame, spriteFrame = 0) {
@@ -350,6 +361,11 @@ class CCRGame {
 	}
 
 	UpdateDirection (x, y, d) {
+		// Check if there is an arrow here
+		const checkArrow = this.gamedata.arrows.placed[`x${x}y${y}`];
+		if (typeof(checkArrow) !== 'undefined') {
+			return checkArrow;
+		}
 		// Check if there is a wall directly in front of us (check the current grid square, and the grid square ahead of us)
 		if (this.CheckCollidibleWalls(x, y, d)){
 			const checkd = this.directions.check[d];
