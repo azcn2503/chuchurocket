@@ -231,9 +231,11 @@ class CCRGame {
 		if (typeof(this.gamedata.arrows.placed[`x${data.x}y${data.y}`]) !== 'undefined') {
 			this.RemoveArrow(data);
 		}
+		this.AddItem('dummyarrow', { x: data.x, y: data.y, health: 1 }, this.gamedata.dom);
 	}
 
 	HandleMouseUp (e) {
+		this.RemoveItem('dummyarrow');
 		this.cursor.up = this.GetMouseCoords(e);
 		this.cursor.down = null;
 		this.queue.forEach( (fn) => { fn(); } );
@@ -248,7 +250,14 @@ class CCRGame {
 	HandleMouseMove (e) {
 		this.cursor.position = this.GetMouseCoords(e);
 		this.GetDirectionFromCursor();
-		console.log(this.cursor.dir);
+		let dummyArrow = this.gamedata.arrows.dummy;
+		if (typeof(dummyArrow) !== 'undefined' && dummyArrow) {
+			dummyArrow.removeClass( (i, css) => {
+				if (!/dir[0-9]/.test(css)) { return; }
+				return css.match(/dir[0-9]/)[0];
+			})
+			.addClass(`dir${this.cursor.dir}`);
+		}
 	}
 
 	GetMouseCoords (e) {
@@ -309,6 +318,14 @@ class CCRGame {
 		this.gamedata.collisions[type] = this.gamedata.collisions[type] || {};
 
 		switch (type) {
+			case 'dummyarrow':
+				if (target) {
+					_el.prop('class', `arrow health${data.health}`)
+					.css('width', '50px')
+					.css('height', '50px');
+				}
+				this.gamedata.arrows.dummy = _el;
+			break;
 			case 'arrow':
 				if (target) {
 					_el.prop('class', `arrow dir${data.d}`)
@@ -399,6 +416,12 @@ class CCRGame {
 	RemoveItem (type, data) {
 		let el;
 		switch (type) {
+			case 'dummyarrow':
+				el = this.gamedata.arrows.dummy;
+				if (typeof(el) == 'undefined' || !el) { return; }
+				el.remove();
+				this.gamedata.arrows.dummy = null;
+			break;
 			case 'arrow': 
 				el = this.gamedata.arrows.placed[`x${data.x}y${data.y}`].obj;
 				el.remove();
@@ -414,7 +437,6 @@ class CCRGame {
 	}
 
 	RemoveArrow (data) {
-		console.log('Trying to remove');
 		this.RemoveItem('arrow', data);
 	}
 
