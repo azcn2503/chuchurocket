@@ -11,13 +11,18 @@
 	<div id="levels" class="sidebox"><div class="content">Level Selection</div></div>
 	<div id="feedback" class="sidebox"><div class="content">Feedback</div></div>
 
-	<div id='game'></div><div>{{> playback}}</div>
+	<div id='game'></div>
+
+	{{> toolbar}}
+
+	{{> playback}}
 
 </body>
 
 <template name="item">
 	<div class="{{className}}" style="margin-left: {{marginLeft}}px; margin-top: {{marginTop}}px; position: absolute; width: {{width}}px; height: {{height}}px;"></div>
 </template>
+
 <template name='playback'>
 	<div class='playback'>
 		{{#if gameIsReady}}
@@ -25,4 +30,16 @@
 			<input type='button' name='stop' value='{{stopButtonValue}}' />
 		{{/if}}
 	</div>
+</template>
+
+<template name='toolbar'>
+	<div class='toolbar'>
+		{{> toolbar_arrows}}
+	</div>
+</template>
+
+<template name='toolbar_arrows'>
+	{{#each arrows}}
+		<div class='arrow dir{{dir}} {{#if unavailable dir}}health1{{/if}}'><div class='label'>{{availableCount dir}}</div></div>
+	{{/each}}
 </template>

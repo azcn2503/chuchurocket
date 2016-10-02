@@ -29,11 +29,10 @@ input[type=button] {
 
 .playback {
 	position: absolute;
-	bottom: 0;
-	left: 0;
-	width: 100%;
-	text-align: center;
-	padding: 10px;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+	margin-top: 300px;
 }
 
 #feedback {
@@ -53,99 +52,100 @@ input[type=button] {
 	&:hover { left: 0; }
 }
 
-.ccr_wrapper {
-	display: inline-block;
-	.sprite {
-		background-position: 0 0;
-		&.dir0 { background-position-y: 0; }
-		&.dir1 { background-position-y: -50px; }
-		&.dir2 { background-position-y: -100px; }
-		&.dir3 { background-position-y: -150px; }
-		&.frame0 { background-position-x: 0; }
-		&.frame1 { background-position-x: -50px; }
-		&.frame2 { background-position-x: -100px; }
-		&.frame3 { background-position-x: -150px; }
-		&.frame4 { background-position-x: -200px; }
-		&.frame5 { background-position-x: -250px; }
-		&.frame6 { background-position-x: -300px; }
-		&.frame7 { background-position-x: -350px; }
-		&.frame8 { background-position-x: -400px; }
-		&.frame9 { background-position-x: -450px; }
+.sprite {
+	background-position: 0 0;
+	&.dir0 { background-position-y: 0; }
+	&.dir1 { background-position-y: -50px; }
+	&.dir2 { background-position-y: -100px; }
+	&.dir3 { background-position-y: -150px; }
+	&.frame0 { background-position-x: 0; }
+	&.frame1 { background-position-x: -50px; }
+	&.frame2 { background-position-x: -100px; }
+	&.frame3 { background-position-x: -150px; }
+	&.frame4 { background-position-x: -200px; }
+	&.frame5 { background-position-x: -250px; }
+	&.frame6 { background-position-x: -300px; }
+	&.frame7 { background-position-x: -350px; }
+	&.frame8 { background-position-x: -400px; }
+	&.frame9 { background-position-x: -450px; }
+}
+.arrow {
+	background-image: url('img/arrows.png');
+	height: @gridSize;
+	width: @gridSize;
+	z-index: 1;
+	background-position: -200px;
+	&.dir0 { background-position: 0; }
+	&.dir1 { background-position: -50px; }
+	&.dir2 { background-position: -100px; }
+	&.dir3 { background-position: -150px; }
+	&.health1 { opacity: .5; }
+	&.health0 { opacity: 0; }
+}
+.cat {
+	background-image: url('img/kapukapu-sprite.png');
+	z-index: 3;
+}
+.goal {
+	background-color: #f00;
+	border-radius: 25px;
+	z-index: 3;
+	-webkit-transform: scale(0.75);
+}
+.grid {
+	text-align: right;
+	background-image: url('img/grid.png');
+	z-index: 1;
+	&.col1 {
+		background-color: @col1;
+		background: linear-gradient(135deg, @col1 0%, darken(@col1, 10%) 100%);
+		/*background-image: url('img/col1.png');*/
 	}
+	&.col2 {
+		background-color: @col2;
+		background: linear-gradient(135deg, @col2 0%, darken(@col2, 10%) 100%);
+		/*background-image: url('img/col2.png');*/
+	}
+	span {
+		opacity: 0;
+	}
+	&:hover span {
+		opacity: 1;
+	}
+}
+.hole {
+	background-color: #000;
+	border-radius: 25px;
+	z-index: 1;
+	-webkit-transform: scale(0.75);
+}
+.mouse {
+	background-image: url('img/chuchu-sprite.png');
+	z-index: 2;
+}
+.toolbar {
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+	margin-top: 250px;
 	.arrow {
-		background-image: url('img/arrows.png');
-		height: @gridSize;
-		width: @gridSize;
-		z-index: 1;
-		background-position: -200px;
-		&.dir0 { background-position: 0; }
-		&.dir1 { background-position: -50px; }
-		&.dir2 { background-position: -100px; }
-		&.dir3 { background-position: -150px; }
-		&.health1 { opacity: .5; }
-		&.health0 { opacity: 0; }
-	}
-	.cat {
-		background-image: url('img/kapukapu-sprite.png');
-		z-index: 3;
-	}
-	.goal {
-		background-color: #f00;
-		border-radius: 25px;
-		z-index: 3;
-		-webkit-transform: scale(0.75);
-	}
-	.grid {
-		text-align: right;
-		background-image: url('img/grid.png');
-		z-index: 1;
-		&.col1 {
-			background-color: @col1;
-			background: linear-gradient(135deg, @col1 0%, darken(@col1, 10%) 100%);
-			/*background-image: url('img/col1.png');*/
-		}
-		&.col2 {
-			background-color: @col2;
-			background: linear-gradient(135deg, @col2 0%, darken(@col2, 10%) 100%);
-			/*background-image: url('img/col2.png');*/
-		}
-		span {
-			opacity: 0;
-		}
-		&:hover span {
-			opacity: 1;
+		display: inline-block;
+		.label {
+			color: #fff;
+			display: table-cell;
+			font-weight: bold;
+			height: 50px;
+			pointer-events: none;
+			text-align: center;
+			vertical-align: middle;
+			width: 50px;
 		}
 	}
-	.hole {
-		background-color: #000;
-		border-radius: 25px;
-		z-index: 1;
-		-webkit-transform: scale(0.75);
-	}
-	.mouse {
-		background-image: url('img/chuchu-sprite.png');
-		z-index: 2;
-	}
-	.toolbar {
-		.arrow {
-			display: inline-block;
-			.label {
-				color: #fff;
-				display: table-cell;
-				font-weight: bold;
-				height: 50px;
-				pointer-events: none;
-				text-align: center;
-				vertical-align: middle;
-				width: 50px;
-			}
-		}
-	}
-	.wall {
-		border: 1px solid #800;
-		z-index: 4;
-		border-radius: 2px;
-	}
+}
+.wall {
+	background-image: url('img/walls.png');
+	z-index: 4;
 }
 
 .content {

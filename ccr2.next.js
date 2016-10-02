@@ -5,6 +5,13 @@ class CCRGame {
 		this.initData = {};
 		this.cursor = {};
 		this.queue = [];
+		this.reactives = {
+			arrows: {
+				available: {}
+			},
+			state: '',
+			score: 0
+		};
 		this.directions = {
 			// Directions are: 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None (stationary)
 			// Next directions
@@ -60,6 +67,7 @@ class CCRGame {
 			if (typeof(gamedata.arrows.placed) === 'undefined') { gamedata.arrows.placed = {}; }
 			for (let i = 0; i < 4; i += 1) {
 				available[i] = typeof(gamedata.arrows.available[i]) !== 'undefined' ? gamedata.arrows.available[i] : 0;
+				this.reactives.arrows.available[i] = new ReactiveVar(available[i]);
 			}
 			return { available, placed };
 		};
@@ -169,30 +177,8 @@ class CCRGame {
 			}
 		}
 
-		// Create toolbar
-		const _toolbar = ce("div")
-		.prop("class", "toolbar")
-		.css("margin-top", this.gamedata.grid.y * 50 + "px")
-		.css("position", "absolute");
-
-		// Create arrows
-		const _arrows = ce("div");
-		for (let i in this.gamedata.arrows.available){
-			const _arrow = ce("div")
-			.prop("class", "arrow")
-			.addClass("dir" + i);
-			const _label = ce("div")
-			.prop("class", "label")
-			.addClass("shadowtext")
-			.text(this.gamedata.arrows.available[i]);
-			_arrow.append(_label);
-			_arrows.append(_arrow);
-		}
-		_toolbar.append(_arrows);
-
 		_ccr_wrapper.append(_grid_wrapper);
 		_ccr_wrapper.append(_wall_wrapper);
-		_ccr_wrapper.append(_toolbar);
 		this.gamedata.dom = _ccr_wrapper;
 
 		// Clone the gamedata
@@ -397,11 +383,14 @@ class CCRGame {
 			case 'wall':
 				if (target) {
 					_el.prop('class', 'wall')
-					.css("margin-left", (data.d == 1 ? data.x * 50 + (50 - this.settings.wallThickness / 2) : data.d == 3 ? data.x * 50 - this.settings.wallThickness / 2 : data.x * 50) + "px")
-					.css("margin-top", (data.d == 0 ? data.y * 50 - this.settings.wallThickness / 2 : data.d == 2 ? data.y * 50 + (50 - this.settings.wallThickness / 2) : data.y * 50) + "px")
-					.css("width", (data.d == 0 || data.d == 2 ? 50 : this.settings.wallThickness) + "px")
-					.css("height", (data.d == 1 || data.d == 3 ? 50 : this.settings.wallThickness) + "px")
+					//.css("margin-left", (data.d == 1 ? data.x * 50 + (50 - this.settings.wallThickness / 2) : data.d == 3 ? data.x * 50 - this.settings.wallThickness / 2 : data.x * 50) + "px")
+					//.css("margin-top", (data.d == 0 ? data.y * 50 - this.settings.wallThickness / 2 : data.d == 2 ? data.y * 50 + (50 - this.settings.wallThickness / 2) : data.y * 50) + "px")
+					.css("width", (data.d == 0 || data.d == 2 ? 50 + this.settings.wallThickness : this.settings.wallThickness) + "px")
+					.css("height", (data.d == 1 || data.d == 3 ? 50 + this.settings.wallThickness : this.settings.wallThickness) + "px")
 					.prop('title', `x${data.x} y${data.y} d${data.d}`);
+					const xMod = data.d == 1 ? 50 - (this.settings.wallThickness / 2) : -this.settings.wallThickness / 2;
+					const yMod = data.d == 2 ? 50 - (this.settings.wallThickness / 2) : -this.settings.wallThickness / 2;
+					this.PositionItem(_el, data, xMod, yMod);
 				}
 				data.t = data.t || 1;
 				this.gamedata.collisions.wall["x" + data.x + "y" + data.y + "d" + data.d] = data.t;
@@ -433,11 +422,16 @@ class CCRGame {
 
 	PlaceArrow (data) {
 		if (this.cursor.dir == -1) { return false; }
+		if (this.gamedata.arrows.available[this.cursor.dir] <= 0) { return false; }
 		this.AddItem('arrow', { x: data.x, y: data.y, d: this.cursor.dir }, this.gamedata.dom);
+		this.gamedata.arrows.available[this.cursor.dir] -= 1;
+		this.reactives.arrows.available[this.cursor.dir].set(this.gamedata.arrows.available[this.cursor.dir]);
 	}
 
 	RemoveArrow (data) {
 		this.RemoveItem('arrow', data);
+		this.gamedata.arrows.available[data.d] += 1;
+		this.reactives.arrows.available[data.d].set(this.gamedata.arrows.available[data.d]);
 	}
 
 	DamageArrow (data, health) {
@@ -757,6 +751,18 @@ if (Meteor.isClient) {
 		},
 		'click input[name=stop]': () => {
 			test.Stop();
+		}
+	});
+
+	Template.toolbar_arrows.helpers({
+		'arrows': () => {
+			return [ { dir: 0 }, { dir: 1 }, { dir: 2 }, { dir: 3 } ];
+		},
+		'unavailable': (n) => {
+			return test.reactives.arrows.available[n].get() <= 0;
+		},
+		'availableCount': (n) => {
+			return test.reactives.arrows.available[n].get();
 		}
 	});
 
