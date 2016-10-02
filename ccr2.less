@@ -75,11 +75,12 @@ input[type=button] {
 	width: @gridSize;
 	z-index: 1;
 	background-position: -200px;
+	transition: transform .2s, opacity .2s;
 	&.dir0 { background-position: 0; }
 	&.dir1 { background-position: -50px; }
 	&.dir2 { background-position: -100px; }
 	&.dir3 { background-position: -150px; }
-	&.health1 { opacity: .5; }
+	&.health1 { opacity: .5; transform: scale(.75); }
 	&.health0 { opacity: 0; }
 }
 .cat {

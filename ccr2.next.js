@@ -214,8 +214,9 @@ class CCRGame {
 		this.cursor.down.gridY = data.y;
 		this.cursor.up = null;
 		// Check if there are any arrows here, and remove them
-		if (typeof(this.gamedata.arrows.placed[`x${data.x}y${data.y}`]) !== 'undefined') {
-			this.RemoveArrow(data);
+		const checkArrow = this.gamedata.arrows.placed[`x${data.x}y${data.y}`];
+		if (typeof(checkArrow) !== 'undefined') {
+			this.RemoveArrow(checkArrow);
 		}
 		this.AddItem('dummyarrow', { x: data.x, y: data.y, health: 1 }, this.gamedata.dom);
 	}
