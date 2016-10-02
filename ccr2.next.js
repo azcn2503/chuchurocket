@@ -3,7 +3,7 @@ class CCRGame {
 	constructor() {
 		this.gamedata = {};
 		this.initData = {};
-
+		this.cursor = {};
 		this.directions = {
 			// Directions are: 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None (stationary)
 			// Next directions
@@ -199,6 +199,9 @@ class CCRGame {
 		// console.log('this.gamedata.original: ', this.gamedata.original);
 		// console.log('this.gamedata.active: ', this.gamedata.active);
 		this.AppendToTarget(this.initData.target);
+
+		document.querySelector('body').addEventListener('mouseup', (e) => { this.HandleMouseUp(e); });
+		document.querySelector('body').addEventListener('mousemove', (e) => { this.HandleMouseMove(e); });
 	}
 
 	AddGameData(type, obj, originalProperties = null) {
@@ -213,6 +216,59 @@ class CCRGame {
 		this.gamedata.items[type].push(obj);
 		// Add the object to the collisions object using its coordinates as the key (fast lookup)
 		this.gamedata.collisions[type][`x${obj.x}y${obj.y}`] = obj;
+	}
+
+	HandleMouseDown (e, el) {
+		e.preventDefault();
+		const data = e.data;
+		this.cursor.down = this.GetMouseCoords(e);
+		this.cursor.down.gridX = data.x;
+		this.cursor.down.gridY = data.y;
+		this.cursor.up = null;
+		console.log(this.cursor);
+	}
+
+	HandleMouseUp (e) {
+		this.cursor.up = this.GetMouseCoords(e);
+		this.cursor.down = null;
+		console.log(`New direction: ${this.cursor.dir}`);
+	}
+
+	HandleMouseMove (e) {
+		this.cursor.position = this.GetMouseCoords(e);
+		this.GetDirectionFromCursor();
+	}
+
+	GetMouseCoords (e) {
+	    e = e || window.event;
+	    if (e.touches) {
+	        return {
+	            x: e.touches[0].pageX,
+	            y: e.touches[0].pageY
+	        };
+	    } else {
+	        return {
+	            x: e.clientX - document.body.clientLeft,
+	            y: e.clientY - document.body.clientTop
+	        };
+	    }
+	}
+
+	GetDirectionFromCursor () {
+		if (!this.cursor.down) { return false; }
+		let dir;
+		const xMovement = this.cursor.position.x - this.cursor.down.x;
+		const yMovement = this.cursor.position.y - this.cursor.down.y;
+		const xCheck = xMovement < 0 ? -xMovement : xMovement;
+		const yCheck = yMovement < 0 ? -yMovement : yMovement;
+		if (xCheck > yCheck) {
+			dir = xMovement > yMovement ? 1 : 3;
+		} else {
+			dir = xMovement > yMovement ? 0 : 2;
+		}
+		console.log(`Cursor direction: ${dir}`);
+		this.cursor.dir = dir;
+		return dir;
 	}
 
 	PositionItem (el, data, xMod = 0, yMod = 0) {
@@ -230,6 +286,7 @@ class CCRGame {
 			_el = ce("div")
 			.css("position", "absolute");
 			this.PositionItem(_el, data);
+			_el.on('mousedown', null, data, (e) => { this.HandleMouseDown(e, _el) });
 		}
 
 		// Create a collisions object for this type if it doesn't exist
