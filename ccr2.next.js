@@ -4,6 +4,7 @@ class CCRGame {
 		this.gamedata = {};
 		this.initData = {};
 		this.cursor = {};
+		this.queue = [];
 		this.directions = {
 			// Directions are: 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None (stationary)
 			// Next directions
@@ -231,7 +232,13 @@ class CCRGame {
 	HandleMouseUp (e) {
 		this.cursor.up = this.GetMouseCoords(e);
 		this.cursor.down = null;
+		this.queue.forEach( (fn) => { fn(); } );
+		this.queue = [];
 		console.log(`New direction: ${this.cursor.dir}`);
+	}
+
+	QueueForMouseUp (fn) {
+		this.queue.push(fn);
 	}
 
 	HandleMouseMove (e) {
@@ -266,7 +273,6 @@ class CCRGame {
 		} else {
 			dir = xMovement > yMovement ? 0 : 2;
 		}
-		console.log(`Cursor direction: ${dir}`);
 		this.cursor.dir = dir;
 		return dir;
 	}
@@ -286,13 +292,21 @@ class CCRGame {
 			_el = ce("div")
 			.css("position", "absolute");
 			this.PositionItem(_el, data);
-			_el.on('mousedown', null, data, (e) => { this.HandleMouseDown(e, _el) });
+			_el.on('mousedown', null, data, (e) => { this.HandleMouseDown(e, _el); });
 		}
 
 		// Create a collisions object for this type if it doesn't exist
 		this.gamedata.collisions[type] = this.gamedata.collisions[type] || {};
 
 		switch (type) {
+			case 'arrow':
+				if (target) {
+					_el.prop('class', `arrow dir${data.d}`)
+					.css('width', '50px')
+					.css('height', '50px')
+					.on('click', null, data, (e) => { this.RemoveArrow(e.data); });
+				}
+			break;
 			case 'cat':
 				if (target) {
 					_el.prop('class', `cat sprite dir${data.d} frame0`)
@@ -326,8 +340,10 @@ class CCRGame {
 					.css("height", "50px")
 					.addClass((data.x + data.y) % 2 == 0 ? "col1" : "col2")
 					.html(`<span>${data.x}x${data.y}</span>`)
-					.on('click', null, data, (e) => {
-						this.PlaceArrow(e.data);
+					.on('mousedown', null, data, (e) => {
+						this.QueueForMouseUp( () => {
+							this.PlaceArrow(e.data);
+						});
 					});
 				}
 				this.gamedata.grid.data["x" + data.x + "y" + data.y] = 1;
@@ -360,8 +376,16 @@ class CCRGame {
 	}
 
 	PlaceArrow (data) {
+		this.gamedata.arrows.placed[`x${data.x}y${data.y}`] = this.cursor.dir;
+		this.AddItem('arrow', { x: data.x, y: data.y, d: this.cursor.dir }, this.gamedata.dom);
+		console.log(`Placed an arrow at x${data.x}y${data.y} with direction ${this.cursor.dir}`);
+	}
 
-		this.gamedata.arrows.placed[`x${data.x}y${data.y}`] = 0;
+	RemoveArrow (data) {
+
+	}
+
+	DamageArrow (data) {
 
 	}
 
