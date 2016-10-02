@@ -1,5 +1,6 @@
 @col1: #ffd;
 @col2: #fdf;
+@gridSize: 50px;
 
 * {
 	box-sizing: border-box;
@@ -73,13 +74,15 @@ input[type=button] {
 	}
 	.arrow {
 		background-image: url('img/arrows.png');
-		height: 50px;
-		width: 50px;
-		z-index: 2;
+		height: @gridSize;
+		width: @gridSize;
+		z-index: 1;
 		&.dir0 { background-position: 0; }
 		&.dir1 { background-position: -50px; }
 		&.dir2 { background-position: -100px; }
 		&.dir3 { background-position: -150px; }
+		&.health1 { opacity: .5; }
+		&.health0 { opacity: 0; }
 	}
 	.cat {
 		background-image: url('img/kapukapu-sprite.png');

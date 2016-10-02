@@ -219,14 +219,18 @@ class CCRGame {
 		this.gamedata.collisions[type][`x${obj.x}y${obj.y}`] = obj;
 	}
 
-	HandleMouseDown (e, el) {
+	HandleMouseDown (e, type) {
 		e.preventDefault();
 		const data = e.data;
 		this.cursor.down = this.GetMouseCoords(e);
+		this.GetDirectionFromCursor();
 		this.cursor.down.gridX = data.x;
 		this.cursor.down.gridY = data.y;
 		this.cursor.up = null;
-		console.log(this.cursor);
+		// Check if there are any arrows here, and remove them
+		if (typeof(this.gamedata.arrows.placed[`x${data.x}y${data.y}`]) !== 'undefined') {
+			this.RemoveArrow(data);
+		}
 	}
 
 	HandleMouseUp (e) {
@@ -244,6 +248,7 @@ class CCRGame {
 	HandleMouseMove (e) {
 		this.cursor.position = this.GetMouseCoords(e);
 		this.GetDirectionFromCursor();
+		console.log(this.cursor.dir);
 	}
 
 	GetMouseCoords (e) {
@@ -268,6 +273,10 @@ class CCRGame {
 		const yMovement = this.cursor.position.y - this.cursor.down.y;
 		const xCheck = xMovement < 0 ? -xMovement : xMovement;
 		const yCheck = yMovement < 0 ? -yMovement : yMovement;
+		if (xCheck < 5 && yCheck < 5) {
+			this.cursor.dir = -1;
+			return false;
+		}
 		if (xCheck > yCheck) {
 			dir = xMovement > yMovement ? 1 : 3;
 		} else {
@@ -284,6 +293,7 @@ class CCRGame {
 	}
 
 	AddItem (type, data, target) {
+		if (this.state !== 'stopped') { return false; }
 		let _el = null;
 
 		if (target) {
@@ -292,7 +302,7 @@ class CCRGame {
 			_el = ce("div")
 			.css("position", "absolute");
 			this.PositionItem(_el, data);
-			_el.on('mousedown', null, data, (e) => { this.HandleMouseDown(e, _el); });
+			_el.on('mousedown', null, data, (e) => { this.HandleMouseDown(e, type); });
 		}
 
 		// Create a collisions object for this type if it doesn't exist
@@ -303,15 +313,21 @@ class CCRGame {
 				if (target) {
 					_el.prop('class', `arrow dir${data.d}`)
 					.css('width', '50px')
-					.css('height', '50px')
-					.on('click', null, data, (e) => { this.RemoveArrow(e.data); });
+					.css('height', '50px');
 				}
+				this.gamedata.arrows.placed[`x${data.x}y${data.y}`] = { x: data.x, y: data.y, d: data.d, obj: _el, health: 2 };
+				// this.AddGameData(type, { x: data.x, y: data.y, d: data.d, obj: _el });
 			break;
 			case 'cat':
 				if (target) {
 					_el.prop('class', `cat sprite dir${data.d} frame0`)
 					.css("width", "50px")
-					.css("height", "50px");
+					.css("height", "50px")
+					.on('mousedown', null, data, (e) => {
+						this.QueueForMouseUp( () => {
+							this.PlaceArrow(e.data);
+						});
+					});
 				}
 				this.AddGameData(type, { x: data.x, y: data.y, d: data.d, obj: _el }, ['x', 'y', 'd']);
 			break;
@@ -352,7 +368,12 @@ class CCRGame {
 				if (target) {
 					_el.prop('class', `mouse sprite dir${data.d} frame0`)
 					.css("width", "50px")
-					.css("height", "50px");
+					.css("height", "50px")
+					.on('mousedown', null, data, (e) => {
+						this.QueueForMouseUp( () => {
+							this.PlaceArrow(e.data);
+						});
+					});
 				}
 				this.AddGameData(type, {x: data.x, y: data.y, d: data.d, obj: _el }, ['x', 'y', 'd']);
 			break;
@@ -375,18 +396,38 @@ class CCRGame {
 		}
 	}
 
+	RemoveItem (type, data) {
+		let el;
+		switch (type) {
+			case 'arrow': 
+				el = this.gamedata.arrows.placed[`x${data.x}y${data.y}`].obj;
+				el.remove();
+				delete(this.gamedata.arrows.placed[`x${data.x}y${data.y}`]);
+				console.log('Removed');
+			break;
+		}
+	}
+
 	PlaceArrow (data) {
-		this.gamedata.arrows.placed[`x${data.x}y${data.y}`] = this.cursor.dir;
+		if (this.cursor.dir == -1) { return false; }
 		this.AddItem('arrow', { x: data.x, y: data.y, d: this.cursor.dir }, this.gamedata.dom);
-		console.log(`Placed an arrow at x${data.x}y${data.y} with direction ${this.cursor.dir}`);
 	}
 
 	RemoveArrow (data) {
-
+		console.log('Trying to remove');
+		this.RemoveItem('arrow', data);
 	}
 
-	DamageArrow (data) {
-
+	DamageArrow (data, health) {
+		// Damage an arrow, or set it to a specific health
+		let thisArrow = this.gamedata.arrows.placed[`x${data.x}y${data.y}`];
+		thisArrow.health = health || thisArrow.health - 1;
+		if (thisArrow.health < 0) { return false; }
+		thisArrow.obj.removeClass((i, css) => {
+			if (!/health[0-9]+/.test(css)) { return; }
+			return css.match(/health[0-9]/)[0];
+		})
+		.addClass(`health${thisArrow.health}`);
 	}
 
 	Animate (a, frame, spriteFrame = 0) {
@@ -444,8 +485,8 @@ class CCRGame {
 	UpdateDirection (x, y, d) {
 		// Check if there is an arrow here
 		const checkArrow = this.gamedata.arrows.placed[`x${x}y${y}`];
-		if (typeof(checkArrow) !== 'undefined') {
-			return checkArrow;
+		if (typeof(checkArrow) !== 'undefined' && checkArrow.health > 0) {
+			d = checkArrow.d;
 		}
 		// Check if there is a wall directly in front of us (check the current grid square, and the grid square ahead of us)
 		if (this.CheckCollidibleWalls(x, y, d)){
@@ -472,9 +513,18 @@ class CCRGame {
 		this.gamedata.collisions[type] = {};
 
 		for (let i = 0, al = a.length; i < al; i++){
+			const origD = a[i].d;
 
 			// Update direction
 			a[i].d = this.UpdateDirection(a[i].x, a[i].y, a[i].d);
+
+			// Damage arrows
+			if (type == 'cat') {
+				const checkArrow = this.gamedata.arrows.placed[`x${a[i].x}y${a[i].y}`];
+				if (typeof(checkArrow) !== 'undefined' && checkArrow.d == this.directions.opp[origD]) {
+					this.DamageArrow(a[i]);
+				}
+			}
 
 			// Update coordinate
 			a[i].x += (a[i].d == 1 ? 1 : a[i].d == 3 ? -1 : 0);
@@ -482,9 +532,6 @@ class CCRGame {
 
 			// Update collisions
 			this.gamedata.collisions[type]["x" + a[i].x + "y" + a[i].y] = a[i];
-
-			//console.log('Collision data: ', JSON.stringify(this.gamedata.collisions));
-
 		}
 	}
 
@@ -502,9 +549,6 @@ class CCRGame {
 	}
 
 	Play () {
-
-		//console.log(`frame: ${this.frame.master}`);
-
 		// Move mouse
 		if (this.frame.master % this.settings.mouseMoveInterval == 0){
 			this.Move(this.gamedata.items.mouse, 'mouse');
@@ -575,6 +619,11 @@ class CCRGame {
 		this.frame.master = 0;
 		this.frame.cat = 0;
 		this.frame.mouse = 0;
+		// Reset arrows to their unbroken state
+		for (let i in this.gamedata.arrows.placed) {
+			if (!this.gamedata.arrows.placed.hasOwnProperty(i)) { continue; }
+			this.DamageArrow(this.gamedata.arrows.placed[i], 2);
+		}
 	}
 
 	SetState (state) {
