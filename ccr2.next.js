@@ -10,7 +10,9 @@ class CCRGame {
 				available: {}
 			},
 			state: '',
-			score: 0
+			score: new ReactiveVar(0),
+			saved: new ReactiveVar(0),
+			required: new ReactiveVar(0)
 		};
 		this.directions = {
 			// Directions are: 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None (stationary)
@@ -112,7 +114,7 @@ class CCRGame {
 		this.AddCollisionEvent('cat', 'mouse', () => { placeholderCollisionEvent('The cat ate the mouse'); });
 		this.AddCollisionEvent('mouse', 'cat', () => { placeholderCollisionEvent('The mouse went in to the cat'); });
 		this.AddCollisionEvent('mouse', 'hole', () => { placeholderCollisionEvent('Poor little mouse'); });
-		this.AddCollisionEvent('mouse', 'goal', () => { console.log('You are win'); });
+		this.AddCollisionEvent('mouse', 'goal', (obj1, obj2) => { this.SaveMouse(obj1); });
 
 		this.frame = {
 			master: 0,
@@ -121,6 +123,20 @@ class CCRGame {
 		};
 
 		this.SetState('stopped');
+	}
+
+	SaveMouse (data) {
+		const mice = this.gamedata.items.mouse;
+		for (let i in mice) {
+			if (mice[i].x == data.x && mice[i].y == data.y && mice[i].d != -1) {
+				console.log('Saved ' + i);
+				mice[i].d = -1;
+				this.reactives.saved.set(this.reactives.saved.get() + 1);
+				if (this.reactives.saved.get() >= this.reactives.required.get()) {
+					this.SetState('stopped');
+				}
+			}
+		}
 	}
 
 	InitDOM() {
@@ -177,14 +193,13 @@ class CCRGame {
 			}
 		}
 
+		this.reactives.required.set(this.gamedata.items.mouse.length);
+		console.log(this.reactives);
+
 		_ccr_wrapper.append(_grid_wrapper);
 		_ccr_wrapper.append(_wall_wrapper);
 		this.gamedata.dom = _ccr_wrapper;
 
-		// Clone the gamedata
-		// this.gamedata.active = JSON.parse(JSON.stringify(this.gamedata.original));
-		// console.log('this.gamedata.original: ', this.gamedata.original);
-		// console.log('this.gamedata.active: ', this.gamedata.active);
 		this.AppendToTarget(this.initData.target);
 
 		document.querySelector('body').addEventListener('mouseup', (e) => { this.HandleMouseUp(e); });
@@ -227,7 +242,6 @@ class CCRGame {
 		this.cursor.down = null;
 		this.queue.forEach( (fn) => { fn(); } );
 		this.queue = [];
-		console.log(`New direction: ${this.cursor.dir}`);
 	}
 
 	QueueForMouseUp (fn) {
@@ -472,14 +486,12 @@ class CCRGame {
 	DetectCollisions (type1, type2) {
 		let obj1 = this.gamedata.collisions[type1];
 		let obj2 = this.gamedata.collisions[type2];
-		if (typeof(obj1) === 'undefined' || typeof(obj2) === 'undefined') { return false; }
+		if (typeof(obj1) === 'undefined' || typeof(obj2) === 'undefined' || obj1.d == -1 || obj2.d == -1) { return false; }
 		for (let i in obj1){
 			if (obj2.hasOwnProperty(i)){
-				//console.log(obj1[i], obj2[i]);
-				//console.log(`Collision occurred at: ${obj1[i].x}x${obj1[i].y}, between ${obj1[i].obj[0].className} and ${obj2[i].obj[0].className}`);
 				console.log(`Collision detected: ${type1} -> ${type2}`);
 				if (!this.gamedata.collisionEvents[type1][type2]) { continue; }
-				this.gamedata.collisionEvents[type1][type2](obj1, obj2);
+				this.gamedata.collisionEvents[type1][type2](obj1[i], obj2[i]);
 			}
 		}
 	}
@@ -575,7 +587,6 @@ class CCRGame {
 		}
 		// Move cat
 		if (this.frame.master % this.settings.catMoveInterval == 0){
-			console.log(`Moving cat`);
 			this.Move(this.gamedata.items.cat, 'cat');
 			//this.DetectCollisions('cat', 'mouse');
 			this.DetectCollisions('cat', 'hole');
@@ -641,6 +652,7 @@ class CCRGame {
 			if (!this.gamedata.arrows.placed.hasOwnProperty(i)) { continue; }
 			this.DamageArrow(this.gamedata.arrows.placed[i], 2);
 		}
+		this.reactives.saved.set(0);
 	}
 
 	SetState (state) {
@@ -705,12 +717,13 @@ if (Meteor.isClient) {
 		],
 		wall: [
 			{ x: 1, y: 1, d: 2 },
-			{ x: 11, y: 1, d: 1 },
+			{ x: 10, y: 1, d: 1 },
 			{ x: 2, y: 2, d: 2 },
 			{ x: 9, y: 2, d: 1 },
 			{ x: 4, y: 3, d: 2 },
 			{ x: 5, y: 3, d: 2 },
 			{ x: 6, y: 3, d: 2 },
+			{ x: 8, y: 3, d: 1 },
 			{ x: 5, y: 4, d: 2 },
 			{ x: 6, y: 4, d: 2 },
 			{ x: 7, y: 4, d: 2 },
