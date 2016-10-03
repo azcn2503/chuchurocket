@@ -9,10 +9,11 @@ class CCRGame {
 			arrows: {
 				available: {}
 			},
-			state: '',
+			state: new ReactiveVar('stopped'),
 			score: new ReactiveVar(0),
 			saved: new ReactiveVar(0),
-			required: new ReactiveVar(0)
+			required: new ReactiveVar(0),
+			message: new ReactiveVar({})
 		};
 		this.directions = {
 			// Directions are: 0 = Up, 1 = Right, 2 = Down, 3 = Left, -1 = None (stationary)
@@ -110,10 +111,10 @@ class CCRGame {
 
 		// Set up some default collision events
 		this.AddCollisionEvent('cat', 'hole', () => { console.log('Laugh at silly cat!'); });
-		this.AddCollisionEvent('cat', 'goal', () => { placeholderCollisionEvent('You is fail'); });
-		this.AddCollisionEvent('cat', 'mouse', () => { placeholderCollisionEvent('The cat ate the mouse'); });
-		this.AddCollisionEvent('mouse', 'cat', () => { placeholderCollisionEvent('The mouse went in to the cat'); });
-		this.AddCollisionEvent('mouse', 'hole', () => { placeholderCollisionEvent('Poor little mouse'); });
+		this.AddCollisionEvent('cat', 'goal', () => { this.Stop('The cat went in to the rocket!', 'fail'); });
+		this.AddCollisionEvent('cat', 'mouse', () => { this.Stop('The cat ate a mouse!', 'fail'); });
+		this.AddCollisionEvent('mouse', 'cat', () => { this.Stop('The cat ate a mouse!', 'fail'); });
+		this.AddCollisionEvent('mouse', 'hole', () => { this.Stop('A mouse fell in to a hole!', 'fail'); });
 		this.AddCollisionEvent('mouse', 'goal', (obj1, obj2) => { this.SaveMouse(obj1); });
 
 		this.frame = {
@@ -133,7 +134,7 @@ class CCRGame {
 				mice[i].d = -1;
 				this.reactives.saved.set(this.reactives.saved.get() + 1);
 				if (this.reactives.saved.get() >= this.reactives.required.get()) {
-					this.SetState('stopped');
+					this.Stop('You completed the level!', 'success');
 				}
 			}
 		}
@@ -373,7 +374,6 @@ class CCRGame {
 					.css("width", "50px")
 					.css("height", "50px")
 					.addClass((data.x + data.y) % 2 == 0 ? "col1" : "col2")
-					.html(`<span>${data.x}x${data.y}</span>`)
 					.on('mousedown', null, data, (e) => {
 						this.QueueForMouseUp( () => {
 							this.PlaceArrow(e.data);
@@ -436,7 +436,7 @@ class CCRGame {
 	}
 
 	PlaceArrow (data) {
-		if (this.cursor.dir == -1) { return false; }
+		if (this.state == 'started' || this.cursor.dir == -1) { return false; }
 		if (this.gamedata.arrows.available[this.cursor.dir] <= 0) { return false; }
 		this.AddItem('arrow', { x: data.x, y: data.y, d: this.cursor.dir }, this.gamedata.dom);
 		this.gamedata.arrows.available[this.cursor.dir] -= 1;
@@ -577,6 +577,12 @@ class CCRGame {
 		this.Animate(a);
 	}
 
+	ResetCollisions (a) {
+		for (let i in a) {
+			delete(a[i]);
+		}
+	}
+
 	Play () {
 		// Move mouse
 		if (this.frame.master % this.settings.mouseMoveInterval == 0){
@@ -633,17 +639,24 @@ class CCRGame {
 		this.settings.animationDelay = 6;
 	}
 
-	Stop (preventReset = false) {
-		if (this.state == 'stopped' && !preventReset) {
+	Stop (message, status) {
+		if (this.state == 'stopped') {
 			this.Reset();
 		}
-
 		this.SetState('stopped');
+		if (message) {
+			this.reactives.message.set({
+				message, status
+			});
+		}
 	}
 
 	Reset () {
+		this.reactives.message.set({});
 		this.ResetItems(this.gamedata.items.mouse);
 		this.ResetItems(this.gamedata.items.cat);
+		this.ResetCollisions(this.gamedata.collisions.mouse);
+		this.ResetCollisions(this.gamedata.collisions.cat);
 		this.frame.master = 0;
 		this.frame.cat = 0;
 		this.frame.mouse = 0;
@@ -653,12 +666,13 @@ class CCRGame {
 			this.DamageArrow(this.gamedata.arrows.placed[i], 2);
 		}
 		this.reactives.saved.set(0);
+		console.log(this);
 	}
 
 	SetState (state) {
 
 		this.state = state;
-		Session.set('gameState', state);
+		this.reactives.state.set(this.state);
 
 	}
 
@@ -747,13 +761,13 @@ if (Meteor.isClient) {
 			return Session.get('gameIsReady');
 		},
 		'playButtonValue': () => {
-			let state = Session.get('gameState');
+			const state = test.reactives.state.get();
 			if (state == 'stopped') { return 'Play'; }
 			// if (state == 'started') { return 'Dash'; }
 			return 'Play';
 		},
 		'stopButtonValue': () => {
-			let state = Session.get('gameState');
+			const state = test.reactives.state.get();
 			if (state == 'stopped') { return 'Reset'; }
 			if (state == 'started') { return 'Stop'; }
 		}
@@ -777,6 +791,32 @@ if (Meteor.isClient) {
 		},
 		'availableCount': (n) => {
 			return test.reactives.arrows.available[n].get();
+		}
+	});
+
+	Template.score.helpers({
+		'saved': () => {
+			return test.reactives.saved.get();
+		},
+		'required': () => {
+			return test.reactives.required.get();
+		}
+	});
+
+	Template.message.helpers({
+		'getClasses': () => {
+			let classes = [];
+			if (test.reactives.message.get().hasOwnProperty('message')) {
+				classes.push('visible');
+				if (test.reactives.message.get().hasOwnProperty('status')) {
+					classes.push(`status-${test.reactives.message.get().status}`);
+				}
+				return classes.join(' ');
+			}
+			return classes;
+		},
+		'message': () => {
+			return test.reactives.message.get().message;
 		}
 	});
 

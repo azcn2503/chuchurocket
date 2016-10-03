@@ -12,10 +12,10 @@
 	<div id="feedback" class="sidebox"><div class="content">Feedback</div></div>
 
 	<div id='game'></div>
-
 	{{> toolbar}}
-
 	{{> playback}}
+	{{> score }}
+	{{> message}}
 
 </body>
 
@@ -42,4 +42,12 @@
 	{{#each arrows}}
 		<div class='arrow dir{{dir}} {{#if unavailable dir}}health1{{/if}}'><div class='label'>{{availableCount dir}}</div></div>
 	{{/each}}
+</template>
+
+<template name='score'>
+	<div class='score'>{{saved}}/{{required}}</div>
+</template>
+
+<template name='message'>
+	<div class='message {{getClasses}}'>{{message}}</div>
 </template>

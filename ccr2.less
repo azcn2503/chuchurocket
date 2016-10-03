@@ -1,3 +1,5 @@
+@import 'https://fonts.googleapis.com/css?family=Luckiest+Guy';
+
 @col1: #ffd;
 @col2: #fdf;
 @gridSize: 50px;
@@ -6,8 +8,18 @@
 	box-sizing: border-box;
 }
 
+.mi-center {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	transform: translate(-50%, -50%);
+}
+.mi-box-shadow {
+	box-shadow: 5px 5px 0px rgba(0, 0, 0, .25);
+}
+
 body, html {
-	font: 8pt sans-serif;
+	font: 10pt sans-serif;
 	height: 100%;
 	margin: 0;
 	overflow: hidden;
@@ -28,10 +40,7 @@ input[type=button] {
 }
 
 .playback {
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
+	.mi-center();
 	margin-top: 300px;
 }
 
@@ -41,10 +50,7 @@ input[type=button] {
 }
 
 #game {
-	position: absolute;
-	left: 50%;
-	top: 50%;
-	transform: translate(-50%, -50%);
+	.mi-center();
 }
 
 #levels {
@@ -110,9 +116,6 @@ input[type=button] {
 	span {
 		opacity: 0;
 	}
-	&:hover span {
-		opacity: 1;
-	}
 }
 .hole {
 	background-color: #000;
@@ -125,10 +128,7 @@ input[type=button] {
 	z-index: 2;
 }
 .toolbar {
-	position: absolute;
-	top: 50%;
-	left: 50%;
-	transform: translate(-50%, -50%);
+	.mi-center();
 	margin-top: 250px;
 	.arrow {
 		display: inline-block;
@@ -144,6 +144,43 @@ input[type=button] {
 		}
 	}
 }
+
+.score {
+	.mi-center();
+	.content();
+	margin-top: 250px;
+	margin-left: 200px;
+	width: 200px;
+	text-align: right;
+	font-family: 'Luckiest Guy';
+	font-size: 16pt;
+}
+
+.message {
+	.mi-center();
+	.mi-box-shadow();
+	.content();
+	display: none;
+	min-width: 350px;
+	min-height: 150px;
+	background-color: #fff;
+	vertical-align: middle;
+	z-index: 10;
+	transition: opacity .2s;
+	&.status-fail {
+		background-color: #fcc;
+	}
+	&.status-success {
+		background-color: #cfc;
+	}
+	&.visible {
+		display: block;
+	}
+	&:hover {
+		opacity: .5;
+	}
+}
+
 .wall {
 	background-image: url('img/walls.png');
 	z-index: 4;
